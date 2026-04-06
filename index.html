@@ -50,8 +50,8 @@ canvas#stars{position:absolute;inset:0;pointer-events:none;z-index:0}
 #scene-wrap{
   position:absolute;
   inset:0;
-  perspective:1100px;
-  perspective-origin:50% 60%;
+  perspective:800px;
+  perspective-origin:30% 55%;
 }
 
 #scene{
@@ -63,8 +63,7 @@ canvas#stars{position:absolute;inset:0;pointer-events:none;z-index:0}
   padding:0 120px 60px;
   position:absolute;
   bottom:0;left:0;right:0;
-  /* Yatay eğim: rotateY ile soldan sağa perspektif */
-  transform: rotateY(-22deg) scale(1) translateX(0px);
+  transform: scale(1) translateX(0px);
   transition: none;
 }
 
@@ -113,8 +112,8 @@ canvas#stars{position:absolute;inset:0;pointer-events:none;z-index:0}
   transform-style:preserve-3d;
   transition:transform .25s cubic-bezier(.34,1.56,.64,1);
 }
-.nh-wrap:hover{transform:translateZ(8px) scale(1.06)}
-.nh-wrap.focused{transform:translateZ(20px) scale(1.18);filter:brightness(1.2)}
+.nh-wrap:hover{transform:scale(1.06)}
+.nh-wrap.focused{transform:scale(1.2);filter:brightness(1.3);z-index:10}
 
 .nh{
   width:64px;
@@ -411,10 +410,8 @@ function ayetDizi(str){
 
 function applyT(){
   const sc=document.getElementById('scene');
-  const ry=Math.max(-45,Math.min(0,rotY));
   const z=Math.max(0.12,Math.min(2.5,scaleZ));
-  sc.style.transform=`rotateY(${ry}deg) scale(${z}) translateX(${txOff}px)`;
-  // Yıl bandını da senkronize kaydır
+  sc.style.transform=`scale(${z}) translateX(${txOff}px)`;
   const ybi=document.getElementById('ybi');
   if(ybi) ybi.style.transform=`translateX(${txOff*z}px) scaleX(${z})`;
 }
@@ -471,11 +468,9 @@ function buildScene(nuzul){
     const bot=document.createElement('div');bot.className='nh-bottom';
     wrap.appendChild(nh);wrap.appendChild(side);wrap.appendChild(bot);
 
-    // TEK TIK: odaklanmamışsa odaklan, odaklanmışsa modal aç
     wrap.addEventListener('click',e=>{
       e.stopPropagation();
-      const isFocused = wrap.classList.contains('focused');
-      if(isFocused){
+      if(wrap.classList.contains('focused')){
         openM(sno,ayetler[0]||1,n);
       } else {
         focusCol(col,i,n);
@@ -519,8 +514,8 @@ function focusCol(col,idx,n){
     if(wrap)wrap.classList.add('focused');
     focusedCol=col;
     // Kamera: o sütuna yaklaş — txOff ve scale ayarla
-    const targetTx=-(idx*COL_W - window.innerWidth*0.38);
-    const targetScale=Math.min(2.0, Math.max(1.4, scaleZ*1.4));
+    const targetTx=-(idx*COL_W - window.innerWidth*0.4);
+    const targetScale=1.5;
     animateTo(targetTx, targetScale, 350);
   }
 }
