@@ -205,7 +205,7 @@ canvas#stars{position:absolute;inset:0;pointer-events:none;z-index:0}
     <button id="btn-fit" onclick="fitTumunuGoster()">⊡ Tümünü Göster</button>
   </div>
 
-  <div id="fersah">21. FERSAH</div>
+  <div id="fersah">13. FERSAH</div>
 
   <div id="vp">
     <div id="year-band"></div>
@@ -216,7 +216,7 @@ canvas#stars{position:absolute;inset:0;pointer-events:none;z-index:0}
     <div class="li"><div class="ld" style="background:rgba(201,169,110,.72)"></div>Mekki</div>
     <div class="li"><div class="ld" style="background:rgba(80,190,140,.72)"></div>Medeni</div>
   </div>
-  <div id="hint">TIK · YAKLAŞ &amp; ORTALA &nbsp;|&nbsp; 1-7. FERSAH: TIK · KART AÇ &nbsp;|&nbsp; SCROLL ↑ · ZOOM IN &nbsp;|&nbsp; SCROLL ↓ · ZOOM OUT</div>
+  <div id="hint">TIK · YAKLAŞ &amp; ORTALA &nbsp;|&nbsp; 1-5. FERSAH: TIK · KART AÇ &nbsp;|&nbsp; SCROLL ↑ · ZOOM IN &nbsp;|&nbsp; SCROLL ↓ · ZOOM OUT</div>
 
   <div id="loading">
     <div class="ltxt">القرآن الكريم</div>
@@ -337,7 +337,7 @@ const TR = {
 // 21 fersah: 21 = en uzak (tümü görünür), 1 = en yakın
 // scale değerleri: fersah 21 → fitScale, fersah 1 → fitScale * 20^(20/20) gibi
 // Logaritmik: her fersah bir öncekinin 1.18 katı daha büyük
-const FERSAH_SAYISI = 21;
+const FERSAH_SAYISI = 13;
 const ZOOM_CARPAN = 1.20; // her kademe bu kadar büyür
 let fitScale = 1; // 21. fersah scale değeri (buildScene'de hesaplanır)
 let fersah = 21;  // mevcut fersah (21=uzak, 1=yakın)
@@ -350,13 +350,13 @@ let NUZUL = [];
 let totalCols = 0;
 
 function fersahToScale(f) {
-  // Fersah 21 = fitScale, fersah 1 = fitScale * ZOOM_CARPAN^20
-  return fitScale * Math.pow(ZOOM_CARPAN, 21 - f);
+  // Fersah 13 = fitScale, fersah 1 = fitScale * ZOOM_CARPAN^12
+  return fitScale * Math.pow(ZOOM_CARPAN, 13 - f);
 }
 
 function scalToFersah(s) {
   // Tersine çevir
-  const f = 21 - Math.log(s / fitScale) / Math.log(ZOOM_CARPAN);
+  const f = 13 - Math.log(s / fitScale) / Math.log(ZOOM_CARPAN);
   return Math.round(Math.max(1, Math.min(21, f)));
 }
 
@@ -398,28 +398,27 @@ function animateTo(targetTx, targetTy, targetScale, targetFersah, dur, cb) {
   requestAnimationFrame(step);
 }
 
-// ── TIK: 1 FERSAH YAKINLAŞ + ORTALA ─────────────────────────────────
-function tikZoom(colX, colIdx, nuzulData, sno, ayetler) {
+// ── TIK: YAKINLAŞ + ORTALA ─────────────────────────────────────────
+function tikZoom(colX, colIdx, nuzulData, sno, ayetler, adim) {
+  adim = adim || 1;
   const vp = document.getElementById('vp');
   const vpW = vp.clientWidth;
   const vpH = vp.clientHeight;
 
-  // Eğer 1-7. fersahtaysa kart aç
-  if (fersah <= 7) {
+  // 1-5. fersahtaysa kart aç (çift tık)
+  if (fersah <= 5 && adim >= 2) {
     openM(sno, ayetler[0] || 1, nuzulData);
     return;
   }
 
-  // 1 fersah yaklaş
-  const yeniFersah = Math.max(1, fersah - 1);
+  // adim kadar yaklaş (en az 1. fersah)
+  const yeniFersah = Math.max(1, fersah - adim);
   const yeniScale = fersahToScale(yeniFersah);
 
   // Tıklanan sütunun ortasını ekran ortasına getir
   const colCenterX = colX + COL_W / 2;
   const hedefTx = vpW / 2 - colCenterX * yeniScale;
-  const hedefTy = Math.max(vpH * 0.08, ty); // dikey çok kaçmasın
-
-  fersah = yeniFersah;
+  const hedefTy = Math.max(vpH * 0.08, ty);
   animateTo(hedefTx, hedefTy, yeniScale, yeniFersah, 900);
 }
 
@@ -431,7 +430,7 @@ function fitTumunuGoster() {
   const totalW = totalCols * COL_W;
   const hedefTx = (vpW - totalW * fitScale) / 2;
   const hedefTy = vpH * 0.12;
-  animateTo(hedefTx, hedefTy, fitScale, 21, 800);
+  animateTo(hedefTx, hedefTy, fitScale, 13, 800);
 }
 
 // ── SCROLL ZOOM ───────────────────────────────────────────────────────
@@ -460,8 +459,8 @@ function handleScroll(e, vpRect) {
 
   if (dy > 0) {
     // Zoom out
-    if (fersah >= 21) return;
-    const yeniFersah = Math.min(21, fersah + 1);
+    if (fersah >= 13) return;
+    const yeniFersah = Math.min(13, fersah + 1);
     zoomPivot(yeniFersah, px, py, 280);
   } else {
     // Zoom in
@@ -564,12 +563,15 @@ function buildScene(nuzul) {
     nh.innerHTML = `<div class="nh-n">${n.sira}</div><div class="nh-ar">${s.ar}</div><div class="nh-tr">${s.tr}</div><div class="nh-ay">${n.ayetler}</div><div class="nih">${med ? kubbe() : kabe()}</div>`;
 
     // Tık: pan mı tıklama mı kontrol et
-    let mdX = 0, mdY = 0;
+    let mdX = 0, mdY = 0, nhLastTik = 0;
     nh.addEventListener('mousedown', e => { mdX = e.clientX; mdY = e.clientY; });
     nh.addEventListener('click', e => {
       e.stopPropagation();
       if (Math.abs(e.clientX - mdX) > 5 || Math.abs(e.clientY - mdY) > 5) return;
-      tikZoom(colX, i, n, sno, ayetler);
+      const now = Date.now();
+      const cift = now - nhLastTik < 400;
+      nhLastTik = now;
+      tikZoom(colX, i, n, sno, ayetler, cift ? 3 : 1);
     });
 
     col.appendChild(nh);
@@ -585,10 +587,18 @@ function buildScene(nuzul) {
       p.addEventListener('click', e => {
         e.stopPropagation();
         if (Math.abs(e.clientX - amdX) > 5 || Math.abs(e.clientY - amdY) > 5) return;
-        if (fersah <= 7) {
+        const apNow = Date.now();
+        const apCift = apNow - (window._lastApTik||0) < 400;
+        window._lastApTik = apNow;
+        if (fersah <= 5 && apCift) {
           openM(sno, ano, n);
+        } else if (fersah <= 5 && !apCift) {
+          // tek tık yakın modda: ortala
+          const {w, h} = (() => { const v=document.getElementById('vp'); return {w:v.clientWidth,h:v.clientHeight}; })();
+          const cx = colX + COL_W/2;
+          animateTo(w/2 - cx*scale, h*0.15, scale, fersah, 400);
         } else {
-          tikZoom(colX, i, n, sno, ayetler);
+          tikZoom(colX, i, n, sno, ayetler, apCift ? 3 : 1);
         }
       });
       col.appendChild(p);
