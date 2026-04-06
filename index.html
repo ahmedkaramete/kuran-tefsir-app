@@ -11,7 +11,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0b0b1e}
 #app{width:100%;height:100vh;background:#0b0b1e;overflow:hidden;position:relative;font-family:system-ui,sans-serif}
 canvas#stars{position:absolute;inset:0;pointer-events:none;z-index:0}
 
-/* TOPBAR */
 #topbar{position:absolute;top:0;left:0;right:0;height:52px;background:rgba(11,11,30,.96);border-bottom:.5px solid rgba(201,169,110,.22);display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:30;gap:10px}
 .brand{flex-shrink:0}
 .brand-ar{font-family:'Amiri',serif;font-size:18px;color:#c9a96e;direction:rtl;line-height:1}
@@ -31,172 +30,100 @@ canvas#stars{position:absolute;inset:0;pointer-events:none;z-index:0}
 .hl{color:#c9a96e;background:rgba(201,169,110,.15);border-radius:2px;padding:0 2px}
 .srl{padding:12px;text-align:center;color:rgba(201,169,110,.4);font-size:11px}
 
-/* LEGEND */
 .leg{position:absolute;bottom:34px;right:14px;z-index:10;display:flex;flex-direction:column;gap:5px}
 .li{display:flex;align-items:center;gap:5px;font-size:9px;color:rgba(201,169,110,.55)}
 .ld{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 #hint{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);font-size:8.5px;color:rgba(201,169,110,.25);letter-spacing:1.5px;pointer-events:none;transition:opacity .6s;z-index:10;white-space:nowrap}
 
-/* VIEWPORT — perspektif YATAY (rotateY ile) */
+/* YIL BANDI — sabit üstte, kendi kaydırması var */
+#yband{
+  position:absolute;top:52px;left:0;right:0;height:32px;
+  overflow:hidden;z-index:10;pointer-events:none;
+  background:rgba(11,11,30,.85);
+  border-bottom:.5px solid rgba(201,169,110,.15);
+}
+#yband-inner{
+  position:absolute;top:0;bottom:0;
+  display:flex;align-items:stretch;
+  /* genişlik JS'te ayarlanır */
+}
+.ys{
+  flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:9px;letter-spacing:.5px;
+  border-right:.5px solid rgba(201,169,110,.15);
+  white-space:nowrap;padding:0 4px;
+  position:relative;
+}
+.ys::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px}
+.ys.mk{background:rgba(201,169,110,.05);color:rgba(201,169,110,.7)}
+.ys.mk::after{background:rgba(201,169,110,.3)}
+.ys.hi{background:rgba(255,210,60,.1);color:rgba(255,215,80,.95);font-weight:700;font-size:9.5px;border-color:rgba(255,210,60,.4)}
+.ys.hi::after{background:rgba(255,210,60,.6);height:3px}
+.ys.md{background:rgba(80,190,140,.05);color:rgba(80,190,140,.7)}
+.ys.md::after{background:rgba(80,190,140,.3)}
+
+/* VIEWPORT */
 #vp{
-  position:absolute;inset:0;top:52px;
+  position:absolute;left:0;right:0;top:84px;bottom:0;
   overflow:hidden;
   cursor:grab;
-  z-index:1;
 }
 #vp:active{cursor:grabbing}
 
-/* SAHNE KAPSAYICI — perspektif burada */
-#scene-wrap{
-  position:absolute;
-  inset:0;
-  perspective:800px;
-  perspective-origin:30% 55%;
-}
-
+/* SAHNE — transform buraya uygulanır */
 #scene{
-  transform-style:preserve-3d;
+  position:absolute;
+  bottom:40px;
+  left:0;
   display:flex;
   align-items:flex-end;
   direction:rtl;
-  gap:0;
-  padding:0 120px 60px;
-  position:absolute;
-  bottom:0;left:0;right:0;
-  transform: scale(1) translateX(0px);
-  transition: none;
+  transform-origin:bottom center;
+  /* transform JS'ten */
 }
 
-/* YIL BANDI */
-#year-band{
-  position:absolute;
-  top:0;left:0;right:0;
-  height:36px;
-  pointer-events:none;
-  z-index:5;
-  overflow:hidden;
-}
-.yb-inner{
-  position:absolute;
-  top:0;bottom:0;
-  right:0;
-  display:flex;
-  align-items:stretch;
-  direction:rtl;
-}
-.yb-seg{
-  border-right:1px solid rgba(201,169,110,.15);
-  display:flex;align-items:center;justify-content:flex-start;
-  font-size:9px;color:rgba(201,169,110,.7);
-  letter-spacing:.5px;
-  flex-shrink:0;
-  white-space:nowrap;
-  padding:0 6px;
-  position:relative;
-}
-.yb-seg::after{
-  content:'';position:absolute;bottom:0;left:0;right:0;
-  height:2px;background:rgba(201,169,110,.2);
-}
-.yb-seg.mekke{background:rgba(201,169,110,.06)}
-.yb-seg.mekke::after{background:rgba(201,169,110,.35)}
-.yb-seg.hicr{
-  background:rgba(255,210,80,.12);
-  border-color:rgba(255,210,80,.5);
-  color:rgba(255,210,100,.95);
-  font-weight:700;
-  font-size:9.5px;
-}
-.yb-seg.hicr::after{background:rgba(255,210,80,.6);height:3px;}
-.yb-seg.medine{background:rgba(80,190,140,.07)}
-.yb-seg.medine::after{background:rgba(80,190,140,.4)}
-
-/* SÜTUNLAR */
+/* SÜTUN */
 .nc{
   display:flex;flex-direction:column;align-items:center;
   flex-shrink:0;width:74px;direction:ltr;
-  cursor:pointer;
-  user-select:none;
-  -webkit-user-select:none;
+  user-select:none;-webkit-user-select:none;
 }
 
-/* KART — 3D hacim: ön yüz + sağ kenar + alt kenar */
-.nh-wrap{
-  position:relative;
-  width:64px;
-  flex-shrink:0;
-  transform-style:preserve-3d;
-  transition:transform .25s cubic-bezier(.34,1.56,.64,1);
-}
-.nh-wrap:hover{transform:scale(1.06)}
-.nh-wrap.focused{transform:scale(1.2);filter:brightness(1.3);z-index:10}
-
+/* KART */
 .nh{
   width:64px;
   background:linear-gradient(160deg,rgba(30,28,58,.95),rgba(20,18,46,.95));
   border:.5px solid rgba(201,169,110,.38);
+  border-left:2px solid rgba(201,169,110,.6);
   border-radius:6px;
   padding:5px 3px 5px;
   text-align:center;
-  transition:border-color .2s,box-shadow .2s;
+  flex-shrink:0;
   position:relative;
-  z-index:2;
 }
-.nh-wrap.focused .nh{
-  border-color:#c9a96e;
-  box-shadow:0 0 22px rgba(201,169,110,.22),0 0 6px rgba(201,169,110,.12);
-}
-.nh-wrap.mekki .nh{border-left-color:rgba(201,169,110,.7);border-left-width:2px}
-.nh-wrap.medeni .nh{border-left-color:rgba(80,190,140,.7);border-left-width:2px}
-
-/* 3D sağ kenar */
-.nh-side{
-  position:absolute;
-  top:3px;bottom:-3px;
-  right:-5px;width:5px;
-  background:linear-gradient(to right,rgba(201,169,110,.25),rgba(201,169,110,.08));
-  border-radius:0 3px 3px 0;
-  transform:rotateY(90deg) translateZ(2px);
-  transform-origin:left center;
-  z-index:1;
-}
-.nh-wrap.medeni .nh-side{background:linear-gradient(to right,rgba(80,190,140,.25),rgba(80,190,140,.08))}
-
-/* 3D alt kenar */
-.nh-bottom{
-  position:absolute;
-  left:3px;right:-3px;bottom:-4px;height:4px;
-  background:linear-gradient(to bottom,rgba(201,169,110,.2),rgba(201,169,110,.06));
-  border-radius:0 0 3px 3px;
-  transform:rotateX(-90deg) translateZ(2px);
-  transform-origin:top center;
-  z-index:1;
-}
-
+.nc.md .nh{border-left-color:rgba(80,190,140,.7)}
 .nh-n{font-size:7.5px;color:rgba(201,169,110,.55);letter-spacing:.5px}
 .nh-ar{font-size:12px;color:#d4b47a;font-family:'Amiri',serif;direction:rtl;line-height:1.35;margin:2px 0 1px}
 .nh-tr{font-size:7px;color:rgba(220,215,200,.72);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:60px}
 .nh-ay{font-size:6.5px;color:rgba(201,169,110,.32);margin-top:1px}
 .nih{display:flex;justify-content:center;gap:3px;margin-top:3px}
 
-/* AYET PİLLLERİ */
+/* AYET PİLLİ */
 .ap{
-  width:56px;min-height:30px;
+  width:56px;min-height:28px;
   background:rgba(255,255,255,.06);
   border:.5px solid rgba(255,255,255,.11);
   border-radius:4px;margin-top:3px;
   display:flex;flex-direction:column;align-items:center;justify-content:center;
-  cursor:pointer;transition:background .15s,border-color .15s,transform .15s;
   padding:3px 2px;flex-shrink:0;
 }
-.ap:hover{background:rgba(201,169,110,.14);border-color:rgba(201,169,110,.45);transform:scaleY(1.08)}
-.ap.mk{border-left:1.5px solid rgba(201,169,110,.55)}
-.ap.md{border-left:1.5px solid rgba(80,190,140,.55)}
+.nc.mk .ap{border-left:1.5px solid rgba(201,169,110,.5)}
+.nc.md .ap{border-left:1.5px solid rgba(80,190,140,.5)}
 .ap-n{font-size:7.5px;color:rgba(201,169,110,.52)}
 .ap-ar{font-size:8px;color:rgba(230,220,200,.52);font-family:'Amiri',serif;direction:rtl;text-align:center;line-height:1.25;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 
-/* LOADING */
-#loading{position:absolute;inset:52px 0 0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:5;gap:14px}
+#loading{position:absolute;inset:84px 0 0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:5;gap:14px}
 .ldot{display:flex;gap:8px}
 .ldot span{width:7px;height:7px;border-radius:50%;background:#c9a96e;animation:ldp 1.2s infinite}
 .ldot span:nth-child(2){animation-delay:.2s}
@@ -205,7 +132,6 @@ canvas#stars{position:absolute;inset:0;pointer-events:none;z-index:0}
 .ltxt{font-size:13px;color:rgba(201,169,110,.55);font-family:'Amiri',serif;letter-spacing:1px}
 .ltxt2{font-size:10px;color:rgba(201,169,110,.32);letter-spacing:2px;margin-top:4px}
 
-/* OVERLAY + MODAL */
 #ov{position:absolute;inset:52px 0 0;background:rgba(4,4,18,.88);z-index:50;display:none;align-items:center;justify-content:center;backdrop-filter:blur(6px)}
 #ov.open{display:flex}
 #modal{width:480px;max-width:95vw;height:560px;background:linear-gradient(145deg,#0e0e2c,#181838);border:.5px solid rgba(201,169,110,.3);border-radius:14px;display:flex;flex-direction:column;overflow:hidden;animation:mpop .32s cubic-bezier(.34,1.56,.64,1)}
@@ -269,16 +195,17 @@ canvas#stars{position:absolute;inset:0;pointer-events:none;z-index:0}
     </div>
   </div>
 
+  <div id="yband"><div id="yband-inner"></div></div>
+
   <div id="vp">
-    <div id="year-band"><div class="yb-inner" id="ybi"></div></div>
-    <div id="scene-wrap"><div id="scene"></div></div>
+    <div id="scene"></div>
   </div>
 
   <div class="leg">
     <div class="li"><div class="ld" style="background:rgba(201,169,110,.75)"></div>Mekki</div>
     <div class="li"><div class="ld" style="background:rgba(80,190,140,.75)"></div>Medeni</div>
   </div>
-  <div id="hint">SCROLL · ZOOM &nbsp;|&nbsp; SÜRÜKLE · GEZİN &nbsp;|&nbsp; TEK TIK YAKLAŞ · ÇİFT TIK AÇ</div>
+  <div id="hint">SCROLL · ZOOM &nbsp;|&nbsp; SÜRÜKLE · GEZİN &nbsp;|&nbsp; 1-7. KADEMEDE ÇİFT TIK AÇAR</div>
 
   <div id="loading">
     <div class="ltxt">القرآن الكريم</div>
@@ -324,6 +251,7 @@ const BASE="https://raw.githubusercontent.com/ahmedkaramete/tefsir_data/main/";
 const NUZUL_URL=BASE+"nuzul_sirasi.json";
 const PART1_URL=BASE+"mefatih_part1.txt";
 const PART2_URL=BASE+"mefatih_part2.txt";
+const COL_W=74;
 
 const MEDENI=new Set([2,3,4,5,8,9,22,24,33,47,48,49,57,58,59,60,61,62,63,64,65,66,76,98,99,110]);
 const SURELER={
@@ -370,20 +298,18 @@ const AR={
   "1:1":"بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ","1:2":"الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ",
   "1:3":"الرَّحْمَٰنِ الرَّحِيمِ","1:4":"مَالِكِ يَوْمِ الدِّينِ",
   "1:5":"إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينُ","1:6":"اهْدِنَا الصِّرَاطَ الْمُسْتَقِيمَ",
-  "1:7":"صِرَاطَ الَّذِينَ أَنْعَمْتَ عَلَيْهِمْ","96:1":"اقْرَأْ بِاسْمِ رَبِّكَ الَّذِي خَلَقَ",
-  "96:2":"خَلَقَ الْإِنسَانَ مِنْ عَلَقٍ","96:3":"اقْرَأْ وَرَبُّكَ الْأَكْرَمُ",
-  "96:4":"الَّذِي عَلَّمَ بِالْقَلَمِ","96:5":"عَلَّمَ الْإِنسَانَ مَا لَمْ يَعْلَمْ",
+  "1:7":"صِرَاطَ الَّذِينَ أَنْعَمْتَ عَلَيْهِمْ",
+  "96:1":"اقْرَأْ بِاسْمِ رَبِّكَ الَّذِي خَلَقَ","96:2":"خَلَقَ الْإِنسَانَ مِنْ عَلَقٍ",
+  "96:3":"اقْرَأْ وَرَبُّكَ الْأَكْرَمُ","96:4":"الَّذِي عَلَّمَ بِالْقَلَمِ","96:5":"عَلَّمَ الْإِنسَانَ مَا لَمْ يَعْلَمْ",
   "97:1":"إِنَّا أَنزَلْنَاهُ فِي لَيْلَةِ الْقَدْرِ",
   "112:1":"قُلْ هُوَ اللَّهُ أَحَدٌ","112:2":"اللَّهُ الصَّمَدُ",
   "112:3":"لَمْ يَلِدْ وَلَمْ يُولَدْ","112:4":"وَلَمْ يَكُن لَّهُ كُفُوًا أَحَدٌ",
   "103:1":"وَالْعَصْرِ","103:2":"إِنَّ الْإِنسَانَ لَفِي خُسْرٍ","103:3":"إِلَّا الَّذِينَ آمَنُوا",
 };
 const TR={
-  "1:1":"Rahman ve Rahîm olan Allah'ın adıyla.",
-  "1:2":"Hamd, âlemlerin Rabbi Allah'a mahsustur.",
+  "1:1":"Rahman ve Rahîm olan Allah'ın adıyla.","1:2":"Hamd, âlemlerin Rabbi Allah'a mahsustur.",
   "1:3":"O, Rahman'dır, Rahîm'dir.","1:4":"Din gününün tek sahibidir.",
-  "1:5":"Yalnız Sana kulluk eder, yalnız Senden yardım dileriz.",
-  "1:6":"Bizi doğru yola ilet.",
+  "1:5":"Yalnız Sana kulluk eder, yalnız Senden yardım dileriz.","1:6":"Bizi doğru yola ilet.",
   "1:7":"Kendilerine nimet verdiklerinin yoluna.",
   "96:1":"Yaratan Rabbinin adıyla oku.","96:2":"İnsanı bir alekten yarattı.",
   "96:3":"Oku, Rabbin en büyük kerem sahibidir.","96:4":"O, kalemle öğretendir.",
@@ -394,20 +320,29 @@ const TR={
   "103:3":"Ancak iman edip salih amel işleyenler hariç.",
 };
 
-// ── Durum değişkenleri ────────────────────────────────────────────────
+// ── ZOOM KADEMELERİ ───────────────────────────────────────────────────
+// 21 kademe: 20=en uzak, 0=en yakın
+// Kart açma: kademe 0-6 arası (yakın) → çift tık açar
+const KADEMELER=[];
+for(let i=0;i<21;i++){
+  // logaritmik dağılım: 0.12 → 2.4
+  KADEMELER.push(Math.round(0.12*Math.pow(2.4/0.12,i/20)*100)/100);
+}
+let kademe=15; // başlangıç ~geniş görünüm
+
+// ── DURUM DEĞİŞKENLERİ ────────────────────────────────────────────────
 let NUZUL=[], tefsirTam=null, tefsirYukleniyor=false;
 let cSure=null, cAyet=null, cNuzul=null, flipped=false;
 let tefParts=[], tefIdx=0;
-// Perspektif: rotateY (yatay eğim), scale, translateX
-let rotY=-22, scaleZ=1, txOff=0, tyOff=0;
-const KADEMELER=[0.15,0.25,0.4,0.6,0.9,1.35,2.0];
-let kademe=4; // başlangıç: 0.9 (5. kademe, geniş görünüm)
-let dragging=false, lx=0, ly=0, velX=0;
+let tx=0, ty=0; // pan offset
+let pressing=false, startX=0, startY=0, lastX=0, lastY=0;
+let moved=false, velX=0, velY=0;
+let lastTikZaman=0, lastTikEl=null;
 let srTimer=null;
-let focusedCol=null; // tek tık odağı
+const HAREKET_ESIGI=6; // piksel
 const SAYFA=3200;
-const COL_W=74;
 
+// ── YARDIMCI FONKSİYONLAR ────────────────────────────────────────────
 function kabe(){return`<svg width="13" height="13" viewBox="0 0 13 13"><rect x="1.5" y="3.5" width="10" height="8" rx=".5" fill="rgba(201,169,110,.85)"/><rect x="3.5" y="6.5" width="2.2" height="5" rx=".3" fill="rgba(0,0,12,.6)"/><line x1="0" y1="3.5" x2="13" y2="3.5" stroke="rgba(201,169,110,.55)" stroke-width=".8"/></svg>`;}
 function kubbe(){return`<svg width="13" height="13" viewBox="0 0 13 13"><path d="M1.5 9.5 Q6.5 1.5 11.5 9.5Z" fill="rgba(80,190,140,.85)"/><rect x="1.5" y="9.5" width="10" height="3" rx=".3" fill="rgba(80,190,140,.75)"/><line x1="6.5" y1="1.5" x2="6.5" y2=".2" stroke="rgba(80,190,140,.85)" stroke-width=".8"/></svg>`;}
 
@@ -426,245 +361,299 @@ function ayetDizi(str){
   return a;
 }
 
-function zoomKademe(yukari){
-  if(yukari && kademe>0) kademe--;
-  else if(!yukari && kademe<KADEMELER.length-1) kademe++;
-  const hedef=KADEMELER[kademe];
-  animateTo(txOff, hedef, tyOff, 280);
-}
+// ── TRANSFORM ────────────────────────────────────────────────────────
+function getScale(){return KADEMELER[kademe];}
+
 function applyT(){
   const sc=document.getElementById('scene');
-  const z=Math.max(0.12,Math.min(2.5,scaleZ));
-  sc.style.transform=`scale(${z}) translate(${txOff}px,${tyOff}px)`;
-  const ybi=document.getElementById('ybi');
-  const ybi2=document.getElementById('ybi');
-  if(ybi2){
-    const bandW=NUZUL.length*COL_W*z;
-    ybi2.style.width=bandW+'px';
-    ybi2.style.right=(window.innerWidth/2 - bandW/2 - txOff*z)+'px';
-    ybi2.style.left='auto';
-  }
+  const z=getScale();
+  sc.style.transform=`scale(${z}) translate(${tx}px,${ty}px)`;
+  syncYband();
 }
 
-// ── Yıl bandı ─────────────────────────────────────────────────────────
-// Kur'an 610'da başladı, 632'de tamamlandı = 23 yıl
-// 181 sütun / 23 yıl ≈ 7.87 sütun/yıl
-// Mekke dönemi: 610–622 (13 yıl, ~102 sütun)
-// Hicret: ~622 (sütun 83 civarı)
-// Medine dönemi: 622–632 (10 yıl, ~78 sütun)
-function buildYearBand(nuzulCount){
-  const ybi=document.getElementById('ybi');
-  if(!ybi)return;
-  ybi.innerHTML='';
-  const total=nuzulCount, startYear=610, endYear=632;
-  const years=endYear-startYear; // 22
-  const colsPerYear=total/years;
-  const HICRET_COL=Math.round(colsPerYear*12); // ~83. sütun hicret
+// Yıl bandını sahne ile senkronize et
+function syncYband(){
+  const ybi=document.getElementById('yband-inner');
+  if(!ybi||!NUZUL.length)return;
+  const z=getScale();
+  const vw=window.innerWidth;
+  // Sahnenin sol kenarı ekranda nerede?
+  // scene: transform-origin bottom center → ama translate ile pan
+  // Sahne genişliği: NUZUL.length * COL_W (ölçeksiz)
+  // Ölçekli genişlik: NUZUL.length * COL_W * z
+  // direction:rtl → sütun 0 (Fatiha) en sağda
+  // Yıl bandı da aynı offset ile kaydırılmalı
+  const totalW=NUZUL.length*COL_W;
+  // scene'in ekrandaki sol kenarı:
+  // transform-origin center → scene merkezi vp merkezi + tx*z
+  const vpW=vw;
+  const scenePxW=totalW*z;
+  const sceneLeft=(vpW-scenePxW)/2 + tx*z;
+  ybi.style.left=sceneLeft+'px';
+  ybi.style.width=scenePxW+'px';
+}
 
+// ── ZOOM ANİMASYON ─────────────────────────────────────────────────────
+function animateZoom(hedefKademe, hedefTx, hedefTy, dur){
+  dur=dur||300;
+  const baslKad=kademe, baslTx=tx, baslTy=ty;
+  const t0=performance.now();
+  function step(t){
+    const p=Math.min(1,(t-t0)/dur);
+    const e=1-Math.pow(1-p,3);
+    kademe=Math.round(baslKad+(hedefKademe-baslKad)*e);
+    tx=baslTx+(hedefTx-baslTx)*e;
+    ty=baslTy+(hedefTy-baslTy)*e;
+    applyT();
+    if(p<1)requestAnimationFrame(step);
+    else{kademe=hedefKademe;tx=hedefTx;ty=hedefTy;applyT();}
+  }
+  requestAnimationFrame(step);
+}
+
+// ── YIL BANDI ─────────────────────────────────────────────────────────
+// Kur'an 610–632: 22 yıl, 181 nüzul grubu
+// Her yılın kaç sütun kapladığı orantısal
+// Sütunlar RTL → sütun 0 (Fatiha, 610) en sağda
+function buildYearBand(n){
+  const ybi=document.getElementById('yband-inner');
+  ybi.innerHTML='';
+  const total=n, startY=610, endY=632, years=endY-startY;
+  const colsPerYear=total/years;
+  // RTL: son yıl solda, ilk yıl sağda — direction:rtl ile flex zaten halleder
+  // ama biz LTR array yapıp display:flex direction:rtl ile sıralarız
+  // Aslında daha basit: yıl bantlarını sağdan sola sıralayalım
+  // Sütun 0 = Fatiha = 610 = en sağ
+  // Sütun 180 = son sure = 632 = en sol
+  // Yıl bandı: 610 en sağ, 632 en sol → array'i ters ekle
   for(let y=0;y<years;y++){
-    const yr=startYear+y;
-    const colCount=y===years-1
-      ? total - Math.round(colsPerYear)*(years-1)
+    const yr=startY+y;
+    // Bu yıla düşen sütun sayısı
+    const colSay=y===years-1
+      ? total-Math.round(colsPerYear)*(years-1)
       : Math.round(colsPerYear);
     const seg=document.createElement('div');
-    if(yr===622) seg.className='yb-seg hicr';
-    else if(yr<622) seg.className='yb-seg mekke';
-    else seg.className='yb-seg medine';
-    seg.style.width=(colCount*COL_W)+'px';
-    let label='';
-    if(yr===622) label=`✦ HİCRET ${yr}`;
-    else if(yr===610) label=`▶ İLK VAHİY ${yr}`;
-    else if(yr===632) label=`◼ SON VAHİY ${yr}`;
-    else label=`${yr}`;
-    seg.textContent=label;
+    seg.className='ys '+(yr===622?'hi':yr<622?'mk':'md');
+    // Genişlik: colSay sütun * COL_W (ölçeksiz, syncYband scale uygular)
+    seg.style.flexShrink='0';
+    seg.style.width=(colSay*COL_W)+'px';
+    if(yr===622) seg.textContent=`✦ HİCRET 622`;
+    else if(yr===610) seg.textContent=`▶ 610`;
+    else if(yr===632) seg.textContent=`◼ 632`;
+    else seg.textContent=`${yr}`;
     ybi.appendChild(seg);
   }
+  // direction:rtl ile flex → 610 sağda olsun
+  ybi.style.flexDirection='row-reverse';
+  syncYband();
 }
 
-// ── Sahne ─────────────────────────────────────────────────────────────
+// ── SAHNE ─────────────────────────────────────────────────────────────
 function buildScene(nuzul){
   document.getElementById('loading').style.display='none';
   const sc=document.getElementById('scene');
   sc.innerHTML='';
   nuzul.forEach((n,i)=>{
-    const sno=n.sure_no,s=SURELER[sno]||{ar:'',tr:''};
-    const med=MEDENI.has(sno),ayetler=ayetDizi(n.ayetler);
-    const col=document.createElement('div');col.className='nc';
-    col.dataset.idx=i;col.dataset.sno=sno;col.dataset.sira=n.sira;
-
-    const wrap=document.createElement('div');
-    wrap.className=`nh-wrap ${med?'medeni':'mekki'}`;
+    const sno=n.sure_no, s=SURELER[sno]||{ar:'',tr:''};
+    const med=MEDENI.has(sno), ayetler=ayetDizi(n.ayetler);
+    const col=document.createElement('div');
+    col.className='nc '+(med?'md':'mk');
+    col.dataset.idx=i;
+    col.dataset.sno=sno;
+    col.dataset.sira=n.sira;
 
     const nh=document.createElement('div');nh.className='nh';
     nh.innerHTML=`<div class="nh-n">${n.sira}</div><div class="nh-ar">${s.ar}</div><div class="nh-tr">${s.tr}</div><div class="nh-ay">${n.ayetler}</div><div class="nih">${med?kubbe():kabe()}</div>`;
+    col.appendChild(nh);
 
-    // 3D kenarlar
-    const side=document.createElement('div');side.className='nh-side';
-    const bot=document.createElement('div');bot.className='nh-bottom';
-    wrap.appendChild(nh);wrap.appendChild(side);wrap.appendChild(bot);
-
-    let lastTik=0;
-    wrap.addEventListener('click',e=>{
-      e.stopPropagation();
-      const now=Date.now();
-      const ciftTik=now-lastTik<400;
-      lastTik=now;
-      if(kademe<=2 && ciftTik){
-        openM(sno,ayetler[0]||1,n);
-      } else {
-        focusCol(col,i,n);
-      }
-    });
-
-    col.appendChild(wrap);
     ayetler.forEach(ano=>{
       const p=document.createElement('div');
-      p.className=`ap ${med?'md':'mk'}`;
+      p.className='ap';
       const k=`${sno}:${ano}`;
       p.innerHTML=`<div class="ap-n">${ano}</div><div class="ap-ar">${AR[k]||'·'}</div>`;
-      p.addEventListener('click',e=>{e.stopPropagation();openM(sno,ano,n);});
+      p.dataset.sno=sno;p.dataset.ano=ano;p.dataset.sira=n.sira;
       col.appendChild(p);
     });
     sc.appendChild(col);
   });
 
+  // Başlangıç: Fatiha (sütun 0, en sağ) ortalansın
+  // scene genişliği: NUZUL.length * COL_W, direction:rtl
+  // tx=0 ile scene merkezi ekran merkezi → Fatiha sağda başlar
+  tx=0; ty=0; kademe=15;
+  applyT();
   buildYearBand(nuzul.length);
-  // Sağdan başla
-  setTimeout(()=>{txOff=nuzul.length*COL_W*0.85;applyT();},80);
 }
 
-// ── Tıklama = %25 zoom, ortalı ──────────────────────────────────────
-function focusCol(col,idx,n){
-  // 1-3. kademede: tek tık ortala, çift tık modal
-  // 4-7. kademede: tek tık bir kademe yaklaş + ortala
-  const wrap=col.querySelector('.nh-wrap');
-
-  if(kademe>=3){
-    // Uzaktayız — yaklaş
-    kademe=Math.max(0,kademe-2);
-  }
-  const newScale=KADEMELER[kademe];
-
-  // Tıklanan sütunu ortala
-  const colCenter=-(idx*COL_W);
-  const targetTx=colCenter+window.innerWidth*0.5/newScale;
-  animateTo(targetTx, newScale, tyOff, 320);
-
-  // Odak işaretle
-  if(focusedCol){
-    const pw=focusedCol.querySelector('.nh-wrap');
-    if(pw)pw.classList.remove('focused');
-  }
-  if(wrap)wrap.classList.add('focused');
-  focusedCol=col;
-}
-
-function animateTo(targetTx, targetScale, targetTy, dur){
-  if(targetTy===undefined) targetTy=tyOff;
-  if(dur===undefined) dur=350;
-  const startTx=txOff, startScale=scaleZ, startTy=tyOff, t0=performance.now();
-  function step(t){
-    const p=Math.min(1,(t-t0)/dur);
-    const e=1-Math.pow(1-p,3);
-    txOff=startTx+(targetTx-startTx)*e;
-    scaleZ=startScale+(targetScale-startScale)*e;
-    tyOff=startTy+(targetTy-startTy)*e;
-    applyT();
-    if(p<1)requestAnimationFrame(step);
-  }
-  requestAnimationFrame(step);
-}
-
-// Sahne dışına tıklayınca odağı kaldır
-document.getElementById('vp').addEventListener('click',e=>{
-  if(!e.target.closest('.nc')){
-    if(focusedCol){
-      const pw=focusedCol.querySelector('.nh-wrap');
-      if(pw)pw.classList.remove('focused');
-      focusedCol=null;
-    }
-  }
-});
-
-// ── Sürükleme & Scroll & Trackpad ────────────────────────────────────
-function initDrag(){
+// ── PAN & ZOOM — TEK MERKEZİ FONKSİYON ───────────────────────────────
+function initInput(){
   const vp=document.getElementById('vp');
 
-  // Mouse sürükle
+  // MOUSE DOWN
   vp.addEventListener('mousedown',e=>{
-    if(e.target.closest('#ov')||e.target.closest('.nc'))return;
-    dragging=true;lx=e.clientX;ly=e.clientY;velX=0;vp.style.cursor='grabbing';
+    if(e.target.closest('#ov'))return;
+    pressing=true;
+    startX=lastX=e.clientX;
+    startY=lastY=e.clientY;
+    moved=false;velX=0;velY=0;
     document.body.style.userSelect='none';
     document.body.style.webkitUserSelect='none';
   });
-  window.addEventListener('mouseup',()=>{
-    dragging=false;
-    document.getElementById('vp').style.cursor='grab';
-    document.body.style.userSelect='';
-    document.body.style.webkitUserSelect='';
-    let v=velX;
-    (function inf(){if(Math.abs(v)<0.4)return;v*=0.88;txOff-=v*1.4;applyT();requestAnimationFrame(inf);})();
-  });
+
+  // MOUSE MOVE
   window.addEventListener('mousemove',e=>{
-    if(!dragging)return;
-    const dx=e.clientX-lx;
-    const dy=e.clientY-ly;
-    velX=dx;txOff+=dx*1.6;tyOff+=dy*1.6;
-    lx=e.clientX;ly=e.clientY;applyT();
+    if(!pressing)return;
+    const dx=e.clientX-lastX, dy=e.clientY-lastY;
+    const totalDx=e.clientX-startX, totalDy=e.clientY-startY;
+    if(!moved&&Math.hypot(totalDx,totalDy)>HAREKET_ESIGI) moved=true;
+    if(moved){
+      tx+=dx/getScale();
+      ty+=dy/getScale();
+      velX=dx;velY=dy;
+      applyT();
+    }
+    lastX=e.clientX;lastY=e.clientY;
   });
 
-  // Scroll/wheel: dikey = zoom, yatay = kaydır (trackpad 2 parmak)
+  // MOUSE UP
+  window.addEventListener('mouseup',e=>{
+    if(!pressing)return;
+    pressing=false;
+    document.body.style.userSelect='';
+    document.body.style.webkitUserSelect='';
+    vp.style.cursor='grab';
+
+    if(!moved){
+      // TIK
+      handleTik(e.target, e.clientX, e.clientY);
+    } else {
+      // İNERTIA
+      let vx=velX/getScale(), vy=velY/getScale();
+      (function inf(){
+        if(Math.abs(vx)<0.3&&Math.abs(vy)<0.3)return;
+        vx*=0.88;vy*=0.88;
+        tx+=vx;ty+=vy;
+        applyT();
+        requestAnimationFrame(inf);
+      })();
+    }
+  });
+
+  // SCROLL / WHEEL
   vp.addEventListener('wheel',e=>{
     e.preventDefault();
     if(Math.abs(e.deltaX)>Math.abs(e.deltaY)){
-      // Yatay trackpad swipe → sağa sola kaydır
-      txOff-=e.deltaX*1.8;
+      // Yatay trackpad → pan
+      tx-=e.deltaX/getScale()*1.2;
+      applyT();
     } else {
-      // Dikey scroll → kademe
-      zoomKademe(e.deltaY>0);
+      // Dikey → zoom kademesi
+      // Fare pozisyonunu koru (zoom to cursor)
+      const rect=vp.getBoundingClientRect();
+      const mx=e.clientX-rect.left-rect.width/2;
+      const my=e.clientY-rect.top-rect.height/2;
+      const eskiZ=getScale();
+      if(e.deltaY>0) kademe=Math.min(20,kademe+1);
+      else kademe=Math.max(0,kademe-1);
+      const yeniZ=getScale();
+      // Fare altındaki nokta sabit kalsın
+      tx=tx+(mx/yeniZ-mx/eskiZ);
+      ty=ty+(my/yeniZ-my/eskiZ);
+      applyT();
     }
-    applyT();
-    const h=document.getElementById('hint');h.style.opacity='0';
-    clearTimeout(window._ht);window._ht=setTimeout(()=>h.style.opacity='1',2500);
   },{passive:false});
 
-  // Touch
-  let lpt=0,lpp=0;
+  // TOUCH
+  let lt=0,ltp=0,ltx=0,lty=0,tmoved=false,tstartx=0,tstarty=0;
   vp.addEventListener('touchstart',e=>{
-    if(e.touches.length===1){lx=e.touches[0].clientX;velX=0;}
-    if(e.touches.length===2)lpp=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+    if(e.touches.length===1){
+      lt=e.touches[0].clientX;lty=e.touches[0].clientY;
+      tstartx=lt;tstarty=lty;tmoved=false;
+    }
+    if(e.touches.length===2){
+      ltp=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+    }
   },{passive:true});
   vp.addEventListener('touchmove',e=>{
     e.preventDefault();
     if(e.touches.length===1){
-      const dx=e.touches[0].clientX-lx;
-      velX=dx;txOff-=dx*1.6;lx=e.touches[0].clientX;
+      const dx=e.touches[0].clientX-lt, dy=e.touches[0].clientY-lty;
+      if(!tmoved&&Math.hypot(e.touches[0].clientX-tstartx,e.touches[0].clientY-tstarty)>HAREKET_ESIGI) tmoved=true;
+      if(tmoved){tx+=dx/getScale();ty+=dy/getScale();applyT();}
+      lt=e.touches[0].clientX;lty=e.touches[0].clientY;
     }
     if(e.touches.length===2){
       const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
-      scaleZ*=d/lpp;lpp=d;
+      const ratio=d/ltp;
+      if(ratio>1&&kademe>0) kademe--;
+      else if(ratio<1&&kademe<20) kademe++;
+      ltp=d;applyT();
     }
-    applyT();
   },{passive:false});
+  vp.addEventListener('touchend',e=>{
+    if(!tmoved&&e.changedTouches.length===1){
+      handleTik(document.elementFromPoint(e.changedTouches[0].clientX,e.changedTouches[0].clientY),e.changedTouches[0].clientX,e.changedTouches[0].clientY);
+    }
+  });
 }
 
-// ── Yıldızlar ─────────────────────────────────────────────────────────
-function initStars(){
-  const cv=document.getElementById('stars');
-  function resize(){cv.width=window.innerWidth;cv.height=window.innerHeight;}
-  resize();window.addEventListener('resize',resize);
-  const ctx=cv.getContext('2d');
-  const S=Array.from({length:320},()=>({x:Math.random()*cv.width,y:Math.random()*cv.height,r:Math.random()*1.2+.2,a:Math.random(),s:Math.random()*.008+.002,d:Math.random()>.5?1:-1}));
-  const B=Array.from({length:12},()=>({x:Math.random()*cv.width,y:Math.random()*cv.height,r:Math.random()*1.8+.8,t:Math.random()*6.28,sp:Math.random()*.022+.007}));
-  function draw(){
-    ctx.clearRect(0,0,cv.width,cv.height);
-    S.forEach(s=>{s.a+=s.s*s.d;if(s.a>1||s.a<.08)s.d*=-1;ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,6.28);ctx.fillStyle=`rgba(255,255,240,${s.a*.65})`;ctx.fill();});
-    B.forEach(b=>{b.t+=b.sp;const p=Math.sin(b.t)*.5+.5;ctx.beginPath();ctx.arc(b.x,b.y,b.r*(.3+p*.7),0,6.28);ctx.fillStyle=`rgba(201,169,110,${p*.7})`;ctx.fill();});
-    requestAnimationFrame(draw);
-  }draw();
+// ── TIK MANTIĞI ───────────────────────────────────────────────────────
+function handleTik(el, cx, cy){
+  // Hedef elementi bul
+  const nc=el.closest('.nc');
+  if(!nc)return;
+  const sno=parseInt(nc.dataset.sno)||0;
+  const sira=parseInt(nc.dataset.sira)||0;
+  const n=NUZUL.find(x=>x.sira===sira)||NUZUL[0];
+  const ayetler=ayetDizi(n?n.ayetler:'1');
+
+  // Ayet pill mi?
+  const apEl=el.closest('.ap');
+  const ano=apEl?parseInt(apEl.dataset.ano):(ayetler[0]||1);
+
+  const now=Date.now();
+  const ciftTik=(now-lastTikZaman<400&&lastTikEl===nc);
+  lastTikZaman=now;lastTikEl=nc;
+
+  if(kademe<=6&&ciftTik){
+    // Yakın kademedeyiz + çift tık → modal aç
+    openM(sno,ano,n);
+    return;
+  }
+
+  // Tek tık → ortalayarak yaklaş
+  const idx=parseInt(nc.dataset.idx)||0;
+  tikYaklas(idx, nc);
 }
 
-// ── Modal ──────────────────────────────────────────────────────────────
+function tikYaklas(idx, nc){
+  // Hedef kademe: mevcut kademeden 3 aşağı (yakın), max 0
+  const hedefKademe=Math.max(0, kademe-3);
+  const hedefZ=KADEMELER[hedefKademe];
+  const vw=window.innerWidth;
+  const vpH=document.getElementById('vp').offsetHeight;
+
+  // Sahne direction:rtl, sütun idx → sütunun merkezi sahne içinde
+  // RTL: sütun 0 (Fatiha) sağda → sahne px pozisyonu:
+  // Sahnenin toplam genişliği: NUZUL.length * COL_W
+  // Sütun idx'in sağ kenarı: (NUZUL.length - idx) * COL_W
+  // Sütun merkezi: (NUZUL.length - idx - 0.5) * COL_W
+  const totalW=NUZUL.length*COL_W;
+  const colMerkezSahne=(NUZUL.length-idx-0.5)*COL_W;
+
+  // Ekran merkezinde bu nokta olsun:
+  // (colMerkezSahne + tx) * hedefZ + vw/2 = vw/2 → hedefZ ile
+  // Yani: colMerkezSahne*hedefZ + tx*hedefZ = vw/2
+  // tx = (vw/2/hedefZ) - colMerkezSahne
+  const hedefTx=vw/2/hedefZ - colMerkezSahne;
+
+  // Dikey: sahneni alt hizalı tut ama ortaya çek
+  const hedefTy=ty;
+
+  animateZoom(hedefKademe, hedefTx, hedefTy, 350);
+}
+
+// ── MODAL ────────────────────────────────────────────────────────────
 async function openM(sno,ano,n){
   cSure=sno;cAyet=ano;cNuzul=n;flipped=false;
   document.getElementById('mflip').classList.remove('fl');
@@ -676,7 +665,11 @@ async function openM(sno,ano,n){
   document.getElementById('mar').textContent=AR[k]||`﴿ ${ano} ﴾`;
   document.getElementById('mml').innerHTML=TR[k]?`<div style="font-size:13.5px;line-height:1.85">${TR[k]}</div>`:'<div style="color:rgba(201,169,110,.3);font-size:11px">Yükleniyor...</div>';
   if(!TR[k]){
-    try{const r=await fetch(`https://api.alquran.cloud/v1/ayah/${sno}:${ano}/tr.diyanet`);const d=await r.json();if(d?.data?.text)document.getElementById('mml').innerHTML=`<div style="font-size:13.5px;line-height:1.85">${d.data.text}</div>`;}catch(e){}
+    try{
+      const r=await fetch(`https://api.alquran.cloud/v1/ayah/${sno}:${ano}/tr.diyanet`);
+      const d=await r.json();
+      if(d?.data?.text)document.getElementById('mml').innerHTML=`<div style="font-size:13.5px;line-height:1.85">${d.data.text}</div>`;
+    }catch(e){}
   }
   document.getElementById('ov').classList.add('open');
   durSes();
@@ -698,7 +691,7 @@ async function loadTef(){
   document.getElementById('btit').textContent=`${s.tr} · ${cAyet}. Ayet Tefsiri`;
   if(!tefsirTam){
     if(tefsirYukleniyor){
-      document.getElementById('tbod').innerHTML='<div class="tload">Tefsir metni arka planda indiriliyor...<br>Lütfen birkaç saniye bekleyiniz.</div>';
+      document.getElementById('tbod').innerHTML='<div class="tload">Tefsir metni arka planda indiriliyor...<br>Lütfen bekleyiniz.</div>';
       document.getElementById('tpgr').style.display='none';
       const wait=setInterval(()=>{if(tefsirTam){clearInterval(wait);bulTef();}},600);return;
     }
@@ -718,12 +711,16 @@ function bulTef(){
 }
 async function loadTefsir(){
   tefsirYukleniyor=true;
-  try{const[r1,r2]=await Promise.all([fetch(PART1_URL),fetch(PART2_URL)]);const[t1,t2]=await Promise.all([r1.text(),r2.text()]);tefsirTam=t1+t2;console.log('Tefsir yüklendi:',Math.round(tefsirTam.length/1024/1024*10)/10,'MB');}
-  catch(e){console.warn('Tefsir yüklenemedi:',e.message);}
+  try{
+    const[r1,r2]=await Promise.all([fetch(PART1_URL),fetch(PART2_URL)]);
+    const[t1,t2]=await Promise.all([r1.text(),r2.text()]);
+    tefsirTam=t1+t2;
+    console.log('Tefsir yüklendi:',Math.round(tefsirTam.length/1024/1024*10)/10,'MB');
+  }catch(e){console.warn('Tefsir yüklenemedi:',e.message);}
   tefsirYukleniyor=false;
 }
 
-// ── Ses ───────────────────────────────────────────────────────────────
+// ── SES ──────────────────────────────────────────────────────────────
 function togSes(){if(window._sp)durSes();else basSes();}
 function basSes(){
   if(!cSure||!cAyet)return;
@@ -741,7 +738,7 @@ function durSes(){
   const f=document.getElementById('afil');if(f)f.style.width='0%';
 }
 
-// ── Arama ─────────────────────────────────────────────────────────────
+// ── ARAMA ─────────────────────────────────────────────────────────────
 function initSearch(){
   const inp=document.getElementById('srch'),res=document.getElementById('sr');
   inp.addEventListener('input',()=>{
@@ -760,7 +757,9 @@ function doSearch(q){
   const res=document.getElementById('sr'),ql=q.toLowerCase();const hits=[];
   NUZUL.forEach(n=>{
     const sno=n.sure_no,s=SURELER[sno]||{ar:'',tr:''};const ayetler=ayetDizi(n.ayetler);
-    if(s.tr.toLowerCase().includes(ql)||s.ar.includes(q)){hits.push({sno,ano:ayetler[0]||1,n,meta:`${s.tr} · Nüzul ${n.sira}`,text:`${n.ayetler}. ayetler · ${MEDENI.has(sno)?'Medeni':'Mekki'}`});}
+    if(s.tr.toLowerCase().includes(ql)||s.ar.includes(q)){
+      hits.push({sno,ano:ayetler[0]||1,n,meta:`${s.tr} · Nüzul ${n.sira}`,text:`${n.ayetler}. ayetler · ${MEDENI.has(sno)?'Medeni':'Mekki'}`});
+    }
     ayetler.forEach(ano=>{
       const k=`${sno}:${ano}`,meal=TR[k]||'',ar=AR[k]||'';
       if(meal.toLowerCase().includes(ql)||ar.includes(q)){
@@ -775,20 +774,42 @@ function doSearch(q){
 }
 function srGit(sno,ano,sira){
   const n=NUZUL.find(x=>x.sira===sira)||NUZUL[0];
-  openM(sno,ano,n);
+  const idx=NUZUL.findIndex(x=>x.sira===sira);
   document.getElementById('sr').classList.remove('open');
   document.getElementById('srch').value='';
-  const idx=NUZUL.findIndex(x=>x.sira===sira);
-  if(idx>=0)animateTo(-(idx*COL_W)+window.innerWidth*0.5/scaleZ,Math.max(scaleZ,1.1),tyOff,400);
+  if(idx>=0){
+    const nc=document.querySelector(`.nc[data-idx="${idx}"]`);
+    tikYaklas(idx,nc);
+    setTimeout(()=>openM(sno,ano,n),400);
+  }
 }
 
-// ── Başlat ────────────────────────────────────────────────────────────
+// ── YILDIZLAR ─────────────────────────────────────────────────────────
+function initStars(){
+  const cv=document.getElementById('stars');
+  function resize(){cv.width=window.innerWidth;cv.height=window.innerHeight;}
+  resize();window.addEventListener('resize',()=>{resize();if(NUZUL.length)syncYband();});
+  const ctx=cv.getContext('2d');
+  const S=Array.from({length:300},()=>({x:Math.random()*cv.width,y:Math.random()*cv.height,r:Math.random()*1.2+.2,a:Math.random(),s:Math.random()*.008+.002,d:Math.random()>.5?1:-1}));
+  const B=Array.from({length:10},()=>({x:Math.random()*cv.width,y:Math.random()*cv.height,r:Math.random()*1.8+.8,t:Math.random()*6.28,sp:Math.random()*.02+.007}));
+  function draw(){
+    ctx.clearRect(0,0,cv.width,cv.height);
+    S.forEach(s=>{s.a+=s.s*s.d;if(s.a>1||s.a<.08)s.d*=-1;ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,6.28);ctx.fillStyle=`rgba(255,255,240,${s.a*.65})`;ctx.fill();});
+    B.forEach(b=>{b.t+=b.sp;const p=Math.sin(b.t)*.5+.5;ctx.beginPath();ctx.arc(b.x,b.y,b.r*(.3+p*.7),0,6.28);ctx.fillStyle=`rgba(201,169,110,${p*.7})`;ctx.fill();});
+    requestAnimationFrame(draw);
+  }draw();
+}
+
+// ── BAŞLAT ────────────────────────────────────────────────────────────
 async function init(){
-  initStars();initDrag();initSearch();applyT();
+  initStars();initInput();initSearch();
   try{
-    const r=await fetch(NUZUL_URL);NUZUL=await r.json();buildScene(NUZUL);
+    const r=await fetch(NUZUL_URL);
+    NUZUL=await r.json();
+    buildScene(NUZUL);
   }catch(e){
-    document.getElementById('loading').innerHTML='<div style="color:rgba(201,169,110,.5);font-size:12px;text-align:center">Veri yüklenemedi.</div>';console.error(e);
+    document.getElementById('loading').innerHTML='<div style="color:rgba(201,169,110,.5);font-size:12px;text-align:center">Veri yüklenemedi.</div>';
+    console.error(e);
   }
   loadTefsir();
 }
