@@ -56,7 +56,6 @@ canvas#stars{position:absolute;inset:0;pointer-events:none;z-index:0}
 
 #scene{
   transform-style:preserve-3d;
-  will-change:transform;
   display:flex;
   align-items:flex-end;
   direction:rtl;
@@ -66,7 +65,7 @@ canvas#stars{position:absolute;inset:0;pointer-events:none;z-index:0}
   bottom:0;left:0;right:0;
   /* Yatay eğim: rotateY ile soldan sağa perspektif */
   transform: rotateY(-22deg) scale(1) translateX(0px);
-  transition: transform 0.09s linear;
+  transition: none;
 }
 
 /* YIL BANDI */
@@ -115,7 +114,7 @@ canvas#stars{position:absolute;inset:0;pointer-events:none;z-index:0}
   transition:transform .25s cubic-bezier(.34,1.56,.64,1);
 }
 .nh-wrap:hover{transform:translateZ(8px) scale(1.06)}
-.nh-wrap.focused{transform:translateZ(16px) scale(1.12)}
+.nh-wrap.focused{transform:translateZ(20px) scale(1.18);filter:brightness(1.2)}
 
 .nh{
   width:64px;
@@ -472,20 +471,15 @@ function buildScene(nuzul){
     const bot=document.createElement('div');bot.className='nh-bottom';
     wrap.appendChild(nh);wrap.appendChild(side);wrap.appendChild(bot);
 
-    // TEK TIK: odaklan (zoom)
-    // ÇİFT TIK veya odaklanmışken tekrar tık: modal aç
-    let lastClick=0;
+    // TEK TIK: odaklanmamışsa odaklan, odaklanmışsa modal aç
     wrap.addEventListener('click',e=>{
       e.stopPropagation();
-      const now=Date.now();
-      if(now-lastClick<400){
-        // çift tık → modal
+      const isFocused = wrap.classList.contains('focused');
+      if(isFocused){
         openM(sno,ayetler[0]||1,n);
       } else {
-        // tek tık → odaklan
         focusCol(col,i,n);
       }
-      lastClick=now;
     });
 
     col.appendChild(wrap);
@@ -526,7 +520,7 @@ function focusCol(col,idx,n){
     focusedCol=col;
     // Kamera: o sütuna yaklaş — txOff ve scale ayarla
     const targetTx=-(idx*COL_W - window.innerWidth*0.38);
-    const targetScale=Math.min(1.6, scaleZ*1.25);
+    const targetScale=Math.min(2.0, Math.max(1.4, scaleZ*1.4));
     animateTo(targetTx, targetScale, 350);
   }
 }
