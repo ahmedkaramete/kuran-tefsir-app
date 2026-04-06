@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>القرآن الكريم — Nüzul Zaman Şeridi</title>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:ital@0;1&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;background:#0b0b1e}
+#app{width:100%;height:100vh;background:#0b0b1e;overflow:hidden;position:relative;font-family:system-ui,sans-serif}
+canvas#stars{position:absolute;inset:0;pointer-events:none;z-index:0}
+
+/* TOPBAR */
+#topbar{position:absolute;top:0;left:0;right:0;height:52px;background:rgba(11,11,30,.96);border-bottom:.5px solid rgba(201,169,110,.22);display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:30;gap:10px}
+.brand{flex-shrink:0}
+.brand-ar{font-family:'Amiri',serif;font-size:18px;color:#c9a96e;direction:rtl;line-height:1}
+.brand-sub{font-size:8px;color:rgba(201,169,110,.45);letter-spacing:2px;margin-top:1px}
+#srch-wrap{position:relative;flex:1;max-width:300px}
+#srch{width:100%;background:rgba(201,169,110,.09);border:.5px solid rgba(201,169,110,.3);border-radius:20px;color:#e8e0d0;padding:6px 12px 6px 32px;font-size:11px;outline:none;font-family:inherit}
+#srch::placeholder{color:rgba(201,169,110,.35)}
+.si{position:absolute;left:9px;top:50%;transform:translateY(-50%);pointer-events:none;opacity:.5}
+#sr{position:absolute;top:36px;left:0;right:0;min-width:340px;background:rgba(8,8,26,.98);border:.5px solid rgba(201,169,110,.3);border-radius:8px;max-height:320px;overflow-y:auto;display:none;z-index:200;box-shadow:0 8px 32px rgba(0,0,0,.7)}
+#sr.open{display:block}
+#sr::-webkit-scrollbar{width:3px}
+#sr::-webkit-scrollbar-thumb{background:rgba(201,169,110,.3)}
+.sri{padding:8px 12px;border-bottom:.5px solid rgba(201,169,110,.08);cursor:pointer;display:grid;grid-template-columns:110px 1fr;gap:8px;transition:background .15s}
+.sri:hover{background:rgba(201,169,110,.1)}
+.sri-m{font-size:9.5px;color:rgba(201,169,110,.65);line-height:1.6}
+.sri-t{font-size:11px;color:rgba(220,210,190,.8);line-height:1.6}
+.hl{color:#c9a96e;background:rgba(201,169,110,.15);border-radius:2px;padding:0 2px}
+.srl{padding:12px;text-align:center;color:rgba(201,169,110,.4);font-size:11px}
+
+/* LEGEND */
+.leg{position:absolute;bottom:34px;right:14px;z-index:10;display:flex;flex-direction:column;gap:5px}
+.li{display:flex;align-items:center;gap:5px;font-size:9px;color:rgba(201,169,110,.55)}
+.ld{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+#hint{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);font-size:8.5px;color:rgba(201,169,110,.25);letter-spacing:1.5px;pointer-events:none;transition:opacity .6s;z-index:10;white-space:nowrap}
+
+/* VIEWPORT — perspektif YATAY (rotateY ile) */
+#vp{
+  position:absolute;inset:0;top:52px;
+  overflow:hidden;
+  cursor:grab;
+  z-index:1;
+}
+#vp:active{cursor:grabbing}
+
+/* SAHNE KAPSAYICI — perspektif burada */
+#scene-wrap{
+  position:absolute;
+  inset:0;
+  perspective:1100px;
+  perspective-origin:50% 60%;
+}
+
+#scene{
+  transform-style:preserve-3d;
+  will-change:transform;
+  display:flex;
+  align-items:flex-end;
+  direction:rtl;
+  gap:0;
+  padding:0 120px 60px;
+  position:absolute;
+  bottom:0;left:0;right:0;
+  /* Yatay eğim: rotateY ile soldan sağa perspektif */
+  transform: rotateY(-22deg) scale(1) translateX(0px);
+  transition: transform 0.09s linear;
+}
+
+/* YIL BANDI */
+#year-band{
+  position:absolute;
+  top:0;left:0;right:0;
+  height:36px;
+  pointer-events:none;
+  z-index:5;
+  overflow:hidden;
+}
+.yb-inner{
+  position:absolute;
+  top:0;bottom:0;
+  display:flex;
+  align-items:stretch;
+  direction:rtl;
+}
+.yb-seg{
+  border-right:.5px solid rgba(201,169,110,.2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:9px;color:rgba(201,169,110,.55);
+  letter-spacing:.5px;
+  background:rgba(201,169,110,.04);
+  flex-shrink:0;
+  white-space:nowrap;
+  padding:0 4px;
+}
+.yb-seg.mekke{background:rgba(201,169,110,.05)}
+.yb-seg.hicr{background:rgba(255,200,100,.08);border-color:rgba(255,200,100,.4);color:rgba(255,200,100,.7);font-weight:600}
+.yb-seg.medine{background:rgba(80,190,140,.05)}
+
+/* SÜTUNLAR */
+.nc{
+  display:flex;flex-direction:column;align-items:center;
+  flex-shrink:0;width:74px;direction:ltr;
+  cursor:pointer;
+}
+
+/* KART — 3D hacim: ön yüz + sağ kenar + alt kenar */
+.nh-wrap{
+  position:relative;
+  width:64px;
+  flex-shrink:0;
+  transform-style:preserve-3d;
+  transition:transform .25s cubic-bezier(.34,1.56,.64,1);
+}
+.nh-wrap:hover{transform:translateZ(8px) scale(1.06)}
+.nh-wrap.focused{transform:translateZ(16px) scale(1.12)}
+
+.nh{
+  width:64px;
+  background:linear-gradient(160deg,rgba(30,28,58,.95),rgba(20,18,46,.95));
+  border:.5px solid rgba(201,169,110,.38);
+  border-radius:6px;
+  padding:5px 3px 5px;
+  text-align:center;
+  transition:border-color .2s,box-shadow .2s;
+  position:relative;
+  z-index:2;
+}
+.nh-wrap.focused .nh{
+  border-color:#c9a96e;
+  box-shadow:0 0 22px rgba(201,169,110,.22),0 0 6px rgba(201,169,110,.12);
+}
+.nh-wrap.mekki .nh{border-left-color:rgba(201,169,110,.7);border-left-width:2px}
+.nh-wrap.medeni .nh{border-left-color:rgba(80,190,140,.7);border-left-width:2px}
+
+/* 3D sağ kenar */
+.nh-side{
+  position:absolute;
+  top:3px;bottom:-3px;
+  right:-5px;width:5px;
+  background:linear-gradient(to right,rgba(201,169,110,.25),rgba(201,169,110,.08));
+  border-radius:0 3px 3px 0;
+  transform:rotateY(90deg) translateZ(2px);
+  transform-origin:left center;
+  z-index:1;
+}
+.nh-wrap.medeni .nh-side{background:linear-gradient(to right,rgba(80,190,140,.25),rgba(80,190,140,.08))}
+
+/* 3D alt kenar */
+.nh-bottom{
+  position:absolute;
+  left:3px;right:-3px;bottom:-4px;height:4px;
+  background:linear-gradient(to bottom,rgba(201,169,110,.2),rgba(201,169,110,.06));
+  border-radius:0 0 3px 3px;
+  transform:rotateX(-90deg) translateZ(2px);
+  transform-origin:top center;
+  z-index:1;
+}
+
+.nh-n{font-size:7.5px;color:rgba(201,169,110,.55);letter-spacing:.5px}
+.nh-ar{font-size:12px;color:#d4b47a;font-family:'Amiri',serif;direction:rtl;line-height:1.35;margin:2px 0 1px}
+.nh-tr{font-size:7px;color:rgba(220,215,200,.72);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:60px}
+.nh-ay{font-size:6.5px;color:rgba(201,169,110,.32);margin-top:1px}
+.nih{display:flex;justify-content:center;gap:3px;margin-top:3px}
+
+/* AYET PİLLLERİ */
+.ap{
+  width:56px;min-height:30px;
+  background:rgba(255,255,255,.06);
+  border:.5px solid rgba(255,255,255,.11);
+  border-radius:4px;margin-top:3px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  cursor:pointer;transition:background .15s,border-color .15s,transform .15s;
+  padding:3px 2px;flex-shrink:0;
+}
+.ap:hover{background:rgba(201,169,110,.14);border-color:rgba(201,169,110,.45);transform:scaleY(1.08)}
+.ap.mk{border-left:1.5px solid rgba(201,169,110,.55)}
+.ap.md{border-left:1.5px solid rgba(80,190,140,.55)}
+.ap-n{font-size:7.5px;color:rgba(201,169,110,.52)}
+.ap-ar{font-size:8px;color:rgba(230,220,200,.52);font-family:'Amiri',serif;direction:rtl;text-align:center;line-height:1.25;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+
+/* LOADING */
+#loading{position:absolute;inset:52px 0 0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:5;gap:14px}
+.ldot{display:flex;gap:8px}
+.ldot span{width:7px;height:7px;border-radius:50%;background:#c9a96e;animation:ldp 1.2s infinite}
+.ldot span:nth-child(2){animation-delay:.2s}
+.ldot span:nth-child(3){animation-delay:.4s}
+@keyframes ldp{0%,80%,100%{opacity:.2;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
+.ltxt{font-size:13px;color:rgba(201,169,110,.55);font-family:'Amiri',serif;letter-spacing:1px}
+.ltxt2{font-size:10px;color:rgba(201,169,110,.32);letter-spacing:2px;margin-top:4px}
+
+/* OVERLAY + MODAL */
+#ov{position:absolute;inset:52px 0 0;background:rgba(4,4,18,.88);z-index:50;display:none;align-items:center;justify-content:center;backdrop-filter:blur(6px)}
+#ov.open{display:flex}
+#modal{width:480px;max-width:95vw;height:560px;background:linear-gradient(145deg,#0e0e2c,#181838);border:.5px solid rgba(201,169,110,.3);border-radius:14px;display:flex;flex-direction:column;overflow:hidden;animation:mpop .32s cubic-bezier(.34,1.56,.64,1)}
+@keyframes mpop{from{opacity:0;transform:scale(.82)}to{opacity:1;transform:scale(1)}}
+#mflip{transform-style:preserve-3d;transition:transform .68s cubic-bezier(.4,0,.2,1);flex:1;min-height:0;position:relative}
+#mflip.fl{transform:rotateY(180deg)}
+.mf{position:absolute;inset:0;backface-visibility:hidden;padding:20px;display:flex;flex-direction:column;overflow:hidden}
+.mb{transform:rotateY(180deg);background:linear-gradient(145deg,#0a1d16,#10251e)}
+.mcl{position:absolute;top:12px;right:14px;background:none;border:none;color:rgba(255,255,255,.3);font-size:17px;cursor:pointer;z-index:5;line-height:1;transition:color .15s}
+.mcl:hover{color:rgba(255,255,255,.8)}
+.mbdg{display:inline-flex;align-items:center;gap:5px;background:rgba(201,169,110,.1);border:.5px solid rgba(201,169,110,.22);border-radius:20px;padding:3px 10px;font-size:10px;color:#c9a96e;margin-bottom:8px;width:fit-content}
+.mds{display:flex;gap:4px;margin-bottom:10px;flex-shrink:0;flex-wrap:wrap}
+.dsb{font-size:8px;padding:2px 7px;border-radius:3px}
+.ds1{background:rgba(201,169,110,.13);color:rgba(201,169,110,.82)}
+.ds2{background:rgba(100,180,160,.13);color:rgba(100,180,160,.82)}
+.ds3{background:rgba(140,140,210,.13);color:rgba(140,140,210,.82)}
+.mar{font-family:'Amiri',serif;font-size:21px;line-height:1.9;direction:rtl;text-align:right;color:#f0e8d8;border-bottom:.5px solid rgba(255,255,255,.07);padding-bottom:10px;margin-bottom:10px;flex-shrink:0}
+.mml{font-size:13px;line-height:1.8;color:rgba(220,210,195,.88);flex:1;overflow-y:auto}
+.mml::-webkit-scrollbar{width:2px}
+.mml::-webkit-scrollbar-thumb{background:rgba(201,169,110,.3)}
+.mact{display:flex;gap:7px;margin-top:10px;flex-shrink:0}
+.bt{flex:1;background:rgba(100,180,160,.09);border:.5px solid rgba(100,180,160,.32);color:#64b4a0;padding:9px;border-radius:7px;font-size:11px;cursor:pointer;transition:background .15s}
+.bt:hover{background:rgba(100,180,160,.18)}
+.bt:disabled{opacity:.3;cursor:not-allowed}
+.bs{background:rgba(201,169,110,.08);border:.5px solid rgba(201,169,110,.28);color:#c9a96e;padding:9px 14px;border-radius:7px;font-size:11px;cursor:pointer;transition:background .15s}
+.bs:hover{background:rgba(201,169,110,.16)}
+.bs.pl{background:rgba(201,169,110,.24);border-color:#c9a96e}
+.abar{height:2px;background:rgba(201,169,110,.1);border-radius:1px;margin-top:5px;flex-shrink:0}
+.afil{height:100%;background:#c9a96e;width:0%;transition:width .3s;border-radius:1px}
+.bh{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-shrink:0}
+.bt2{font-size:12px;color:#64b4a0;font-weight:600}
+.bbk{background:rgba(100,180,160,.08);border:.5px solid rgba(100,180,160,.28);color:#64b4a0;padding:4px 10px;border-radius:5px;font-size:10px;cursor:pointer;transition:background .15s}
+.bbk:hover{background:rgba(100,180,160,.18)}
+.bsrc{font-size:9px;color:rgba(100,180,160,.45);background:rgba(100,180,160,.05);border:.5px solid rgba(100,180,160,.1);border-radius:4px;padding:3px 8px;margin-bottom:8px;flex-shrink:0}
+.tbod{font-size:11.5px;line-height:1.85;color:rgba(210,230,225,.85);flex:1;overflow-y:auto;white-space:pre-wrap}
+.tbod::-webkit-scrollbar{width:2px}
+.tbod::-webkit-scrollbar-thumb{background:rgba(100,180,160,.3)}
+.tpgr{display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding-top:7px;border-top:.5px solid rgba(100,180,160,.12);flex-shrink:0}
+.tpb{background:rgba(100,180,160,.08);border:.5px solid rgba(100,180,160,.25);color:#64b4a0;padding:5px 12px;border-radius:5px;font-size:10px;cursor:pointer;transition:background .15s}
+.tpb:hover{background:rgba(100,180,160,.18)}
+.tpb:disabled{opacity:.3;cursor:not-allowed}
+.tpi{font-size:9px;color:rgba(100,180,160,.5)}
+.tload{font-size:11px;color:rgba(100,180,160,.5);text-align:center;padding:30px 20px;line-height:1.8}
+</style>
+</head>
+<body>
+<div id="app">
+  <canvas id="stars"></canvas>
+  <div id="topbar">
+    <div class="brand">
+      <div class="brand-ar">القرآن الكريم</div>
+      <div class="brand-sub">NÜZUL ZAMAN ŞERİDİ · MEFÂTÎHU'L-GAYB</div>
+    </div>
+    <div id="srch-wrap">
+      <svg class="si" width="13" height="13" viewBox="0 0 16 16" fill="none">
+        <circle cx="6.5" cy="6.5" r="4.5" stroke="#c9a96e" stroke-width="1.3"/>
+        <path d="M10 10l3 3" stroke="#c9a96e" stroke-width="1.3" stroke-linecap="round"/>
+      </svg>
+      <input id="srch" type="text" placeholder="Sure, ayet veya meal ara..." autocomplete="off">
+      <div id="sr"></div>
+    </div>
+  </div>
+
+  <div id="vp">
+    <div id="year-band"><div class="yb-inner" id="ybi"></div></div>
+    <div id="scene-wrap"><div id="scene"></div></div>
+  </div>
+
+  <div class="leg">
+    <div class="li"><div class="ld" style="background:rgba(201,169,110,.75)"></div>Mekki</div>
+    <div class="li"><div class="ld" style="background:rgba(80,190,140,.75)"></div>Medeni</div>
+  </div>
+  <div id="hint">SCROLL · ZOOM &nbsp;|&nbsp; SÜRÜKLE · GEZİN &nbsp;|&nbsp; TEK TIK YAKLAŞ · ÇİFT TIK AÇ</div>
+
+  <div id="loading">
+    <div class="ltxt">القرآن الكريم</div>
+    <div class="ltxt2">YÜKLENİYOR</div>
+    <div class="ldot"><span></span><span></span><span></span></div>
+  </div>
+
+  <div id="ov">
+    <div id="modal">
+      <div id="mflip">
+        <div class="mf" id="mfr">
+          <button class="mcl" onclick="closeM()">✕</button>
+          <div class="mbdg" id="mbdg"></div>
+          <div class="mds" id="mds"></div>
+          <div class="mar" id="mar"></div>
+          <div class="mml" id="mml"></div>
+          <div class="mact">
+            <button class="bt" id="btef" onclick="flipM()">Tefsir Görüntüle</button>
+            <button class="bs" id="bses" onclick="togSes()">▶ Dinle</button>
+          </div>
+          <div class="abar"><div class="afil" id="afil"></div></div>
+        </div>
+        <div class="mf mb">
+          <div class="bh">
+            <div class="bt2" id="btit">Tefsir</div>
+            <button class="bbk" onclick="flipM()">← Geri</button>
+          </div>
+          <div class="bsrc">Mefâtîhu'l-Gayb · Fahreddin er-Râzî (ö.606/1210) · Akçağ Yayınları</div>
+          <div class="tbod" id="tbod"></div>
+          <div class="tpgr" id="tpgr" style="display:none">
+            <button class="tpb" id="tpg" onclick="tSayfa(-1)">← Önceki</button>
+            <span class="tpi" id="tpi"></span>
+            <button class="tpb" id="tpi2" onclick="tSayfa(1)">Sonraki →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const BASE="https://raw.githubusercontent.com/ahmedkaramete/tefsir_data/main/";
+const NUZUL_URL=BASE+"nuzul_sirasi.json";
+const PART1_URL=BASE+"mefatih_part1.txt";
+const PART2_URL=BASE+"mefatih_part2.txt";
+
+const MEDENI=new Set([2,3,4,5,8,9,22,24,33,47,48,49,57,58,59,60,61,62,63,64,65,66,76,98,99,110]);
+const SURELER={
+  1:{ar:"الفاتحة",tr:"Fâtiha"},2:{ar:"البقرة",tr:"Bakara"},3:{ar:"آل عمران",tr:"Âl-i İmrân"},
+  4:{ar:"النساء",tr:"Nisâ"},5:{ar:"المائدة",tr:"Mâide"},6:{ar:"الأنعام",tr:"En'âm"},
+  7:{ar:"الأعراف",tr:"A'râf"},8:{ar:"الأنفال",tr:"Enfâl"},9:{ar:"التوبة",tr:"Tevbe"},
+  10:{ar:"يونس",tr:"Yûnus"},11:{ar:"هود",tr:"Hûd"},12:{ar:"يوسف",tr:"Yûsuf"},
+  13:{ar:"الرعد",tr:"Ra'd"},14:{ar:"إبراهيم",tr:"İbrâhîm"},15:{ar:"الحجر",tr:"Hicr"},
+  16:{ar:"النحل",tr:"Nahl"},17:{ar:"الإسراء",tr:"İsrâ"},18:{ar:"الكهف",tr:"Kehf"},
+  19:{ar:"مريم",tr:"Meryem"},20:{ar:"طه",tr:"Tâhâ"},21:{ar:"الأنبياء",tr:"Enbiyâ"},
+  22:{ar:"الحج",tr:"Hac"},23:{ar:"المؤمنون",tr:"Mü'minûn"},24:{ar:"النور",tr:"Nûr"},
+  25:{ar:"الفرقان",tr:"Furkân"},26:{ar:"الشعراء",tr:"Şu'arâ"},27:{ar:"النمل",tr:"Neml"},
+  28:{ar:"القصص",tr:"Kasas"},29:{ar:"العنكبوت",tr:"Ankebût"},30:{ar:"الروم",tr:"Rûm"},
+  31:{ar:"لقمان",tr:"Lokmân"},32:{ar:"السجدة",tr:"Secde"},33:{ar:"الأحزاب",tr:"Ahzâb"},
+  34:{ar:"سبأ",tr:"Sebe'"},35:{ar:"فاطر",tr:"Fâtır"},36:{ar:"يس",tr:"Yâsîn"},
+  37:{ar:"الصافات",tr:"Sâffât"},38:{ar:"ص",tr:"Sâd"},39:{ar:"الزمر",tr:"Zümer"},
+  40:{ar:"غافر",tr:"Gâfir"},41:{ar:"فصلت",tr:"Fussilet"},42:{ar:"الشورى",tr:"Şûrâ"},
+  43:{ar:"الزخرف",tr:"Zuhruf"},44:{ar:"الدخان",tr:"Duhân"},45:{ar:"الجاثية",tr:"Câsiye"},
+  46:{ar:"الأحقاف",tr:"Ahkâf"},47:{ar:"محمد",tr:"Muhammed"},48:{ar:"الفتح",tr:"Fetih"},
+  49:{ar:"الحجرات",tr:"Hucurât"},50:{ar:"ق",tr:"Kâf"},51:{ar:"الذاريات",tr:"Zâriyât"},
+  52:{ar:"الطور",tr:"Tûr"},53:{ar:"النجم",tr:"Necm"},54:{ar:"القمر",tr:"Kamer"},
+  55:{ar:"الرحمن",tr:"Rahmân"},56:{ar:"الواقعة",tr:"Vâkıa"},57:{ar:"الحديد",tr:"Hadîd"},
+  58:{ar:"المجادلة",tr:"Mücâdele"},59:{ar:"الحشر",tr:"Haşr"},60:{ar:"الممتحنة",tr:"Mümtehine"},
+  61:{ar:"الصف",tr:"Saf"},62:{ar:"الجمعة",tr:"Cuma"},63:{ar:"المنافقون",tr:"Münâfikûn"},
+  64:{ar:"التغابن",tr:"Teğâbun"},65:{ar:"الطلاق",tr:"Talâk"},66:{ar:"التحريم",tr:"Tahrîm"},
+  67:{ar:"الملك",tr:"Mülk"},68:{ar:"القلم",tr:"Kalem"},69:{ar:"الحاقة",tr:"Hâkka"},
+  70:{ar:"المعارج",tr:"Meâric"},71:{ar:"نوح",tr:"Nûh"},72:{ar:"الجن",tr:"Cin"},
+  73:{ar:"المزمل",tr:"Müzzemmil"},74:{ar:"المدثر",tr:"Müddessir"},75:{ar:"القيامة",tr:"Kıyâmet"},
+  76:{ar:"الإنسان",tr:"İnsân"},77:{ar:"المرسلات",tr:"Mürselât"},78:{ar:"النبأ",tr:"Nebe'"},
+  79:{ar:"النازعات",tr:"Nâziât"},80:{ar:"عبس",tr:"Abese"},81:{ar:"التكوير",tr:"Tekvîr"},
+  82:{ar:"الإنفطار",tr:"İnfitâr"},83:{ar:"المطففين",tr:"Mutaffifîn"},84:{ar:"الإنشقاق",tr:"İnşikâk"},
+  85:{ar:"البروج",tr:"Burûc"},86:{ar:"الطارق",tr:"Târık"},87:{ar:"الأعلى",tr:"A'lâ"},
+  88:{ar:"الغاشية",tr:"Gâşiye"},89:{ar:"الفجر",tr:"Fecr"},90:{ar:"البلد",tr:"Beled"},
+  91:{ar:"الشمس",tr:"Şems"},92:{ar:"الليل",tr:"Leyl"},93:{ar:"الضحى",tr:"Duhâ"},
+  94:{ar:"الشرح",tr:"İnşirâh"},95:{ar:"التين",tr:"Tîn"},96:{ar:"العلق",tr:"Alak"},
+  97:{ar:"القدر",tr:"Kadr"},98:{ar:"البينة",tr:"Beyyine"},99:{ar:"الزلزلة",tr:"Zilzâl"},
+  100:{ar:"العاديات",tr:"Âdiyât"},101:{ar:"القارعة",tr:"Kâria"},102:{ar:"التكاثر",tr:"Tekâsür"},
+  103:{ar:"العصر",tr:"Asr"},104:{ar:"الهمزة",tr:"Hümeze"},105:{ar:"الفيل",tr:"Fîl"},
+  106:{ar:"قريش",tr:"Kureyş"},107:{ar:"الماعون",tr:"Mâûn"},108:{ar:"الكوثر",tr:"Kevser"},
+  109:{ar:"الكافرون",tr:"Kâfirûn"},110:{ar:"النصر",tr:"Nasr"},111:{ar:"المسد",tr:"Mesed"},
+  112:{ar:"الإخلاص",tr:"İhlâs"},113:{ar:"الفلق",tr:"Felak"},114:{ar:"الناس",tr:"Nâs"},
+};
+const AR={
+  "1:1":"بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ","1:2":"الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ",
+  "1:3":"الرَّحْمَٰنِ الرَّحِيمِ","1:4":"مَالِكِ يَوْمِ الدِّينِ",
+  "1:5":"إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينُ","1:6":"اهْدِنَا الصِّرَاطَ الْمُسْتَقِيمَ",
+  "1:7":"صِرَاطَ الَّذِينَ أَنْعَمْتَ عَلَيْهِمْ","96:1":"اقْرَأْ بِاسْمِ رَبِّكَ الَّذِي خَلَقَ",
+  "96:2":"خَلَقَ الْإِنسَانَ مِنْ عَلَقٍ","96:3":"اقْرَأْ وَرَبُّكَ الْأَكْرَمُ",
+  "96:4":"الَّذِي عَلَّمَ بِالْقَلَمِ","96:5":"عَلَّمَ الْإِنسَانَ مَا لَمْ يَعْلَمْ",
+  "97:1":"إِنَّا أَنزَلْنَاهُ فِي لَيْلَةِ الْقَدْرِ",
+  "112:1":"قُلْ هُوَ اللَّهُ أَحَدٌ","112:2":"اللَّهُ الصَّمَدُ",
+  "112:3":"لَمْ يَلِدْ وَلَمْ يُولَدْ","112:4":"وَلَمْ يَكُن لَّهُ كُفُوًا أَحَدٌ",
+  "103:1":"وَالْعَصْرِ","103:2":"إِنَّ الْإِنسَانَ لَفِي خُسْرٍ","103:3":"إِلَّا الَّذِينَ آمَنُوا",
+};
+const TR={
+  "1:1":"Rahman ve Rahîm olan Allah'ın adıyla.",
+  "1:2":"Hamd, âlemlerin Rabbi Allah'a mahsustur.",
+  "1:3":"O, Rahman'dır, Rahîm'dir.","1:4":"Din gününün tek sahibidir.",
+  "1:5":"Yalnız Sana kulluk eder, yalnız Senden yardım dileriz.",
+  "1:6":"Bizi doğru yola ilet.",
+  "1:7":"Kendilerine nimet verdiklerinin yoluna.",
+  "96:1":"Yaratan Rabbinin adıyla oku.","96:2":"İnsanı bir alekten yarattı.",
+  "96:3":"Oku, Rabbin en büyük kerem sahibidir.","96:4":"O, kalemle öğretendir.",
+  "96:5":"İnsana bilmediğini öğretti.","97:1":"Biz onu Kadir gecesinde indirdik.",
+  "112:1":"De ki: O, Allah'tır, bir tektir.","112:2":"Allah Samed'dir.",
+  "112:3":"Doğurmamış ve doğurulmamıştır.","112:4":"Hiçbir şey O'na denk değildir.",
+  "103:1":"Asra yemin olsun.","103:2":"İnsan gerçekten ziyan içindedir.",
+  "103:3":"Ancak iman edip salih amel işleyenler hariç.",
+};
+
+// ── Durum değişkenleri ────────────────────────────────────────────────
+let NUZUL=[], tefsirTam=null, tefsirYukleniyor=false;
+let cSure=null, cAyet=null, cNuzul=null, flipped=false;
+let tefParts=[], tefIdx=0;
+// Perspektif: rotateY (yatay eğim), scale, translateX
+let rotY=-22, scaleZ=1, txOff=0;
+let dragging=false, lx=0, velX=0;
+let srTimer=null;
+let focusedCol=null; // tek tık odağı
+const SAYFA=3200;
+const COL_W=74;
+
+function kabe(){return`<svg width="13" height="13" viewBox="0 0 13 13"><rect x="1.5" y="3.5" width="10" height="8" rx=".5" fill="rgba(201,169,110,.85)"/><rect x="3.5" y="6.5" width="2.2" height="5" rx=".3" fill="rgba(0,0,12,.6)"/><line x1="0" y1="3.5" x2="13" y2="3.5" stroke="rgba(201,169,110,.55)" stroke-width=".8"/></svg>`;}
+function kubbe(){return`<svg width="13" height="13" viewBox="0 0 13 13"><path d="M1.5 9.5 Q6.5 1.5 11.5 9.5Z" fill="rgba(80,190,140,.85)"/><rect x="1.5" y="9.5" width="10" height="3" rx=".3" fill="rgba(80,190,140,.75)"/><line x1="6.5" y1="1.5" x2="6.5" y2=".2" stroke="rgba(80,190,140,.85)" stroke-width=".8"/></svg>`;}
+
+function tarihler(sira){
+  const nub=sira<=1?"Nübüvvet 1. Yıl":`Nübüvvet ~${Math.min(13,Math.ceil(sira/12))}. Yıl`;
+  const hicri=sira<=80?"Hicret Öncesi":`H. ${Math.ceil((sira-80)/18)+1}. Yıl`;
+  const miladi=sira<=1?"M.S. ~610":sira<=80?`M.S. ~${610+Math.floor(sira/10)}`:`M.S. ~${622+Math.ceil((sira-80)/18)}`;
+  return[nub,hicri,miladi];
+}
+function ayetDizi(str){
+  if(!str)return[];
+  const p=str.split('-').map(s=>parseInt(s));
+  if(isNaN(p[0]))return[];
+  if(p.length===1)return[p[0]];
+  const a=[];for(let i=p[0];i<=p[1]&&a.length<10;i++)a.push(i);
+  return a;
+}
+
+function applyT(){
+  const sc=document.getElementById('scene');
+  const ry=Math.max(-45,Math.min(0,rotY));
+  const z=Math.max(0.12,Math.min(2.5,scaleZ));
+  sc.style.transform=`rotateY(${ry}deg) scale(${z}) translateX(${txOff}px)`;
+  // Yıl bandını da senkronize kaydır
+  const ybi=document.getElementById('ybi');
+  if(ybi) ybi.style.transform=`translateX(${txOff*z}px) scaleX(${z})`;
+}
+
+// ── Yıl bandı ─────────────────────────────────────────────────────────
+// Kur'an 610'da başladı, 632'de tamamlandı = 23 yıl
+// 181 sütun / 23 yıl ≈ 7.87 sütun/yıl
+// Mekke dönemi: 610–622 (13 yıl, ~102 sütun)
+// Hicret: ~622 (sütun 83 civarı)
+// Medine dönemi: 622–632 (10 yıl, ~78 sütun)
+function buildYearBand(nuzulCount){
+  const ybi=document.getElementById('ybi');
+  if(!ybi)return;
+  ybi.innerHTML='';
+  const total=nuzulCount, startYear=610, endYear=632;
+  const years=endYear-startYear; // 22
+  const colsPerYear=total/years;
+  const HICRET_COL=Math.round(colsPerYear*12); // ~83. sütun hicret
+
+  for(let y=0;y<years;y++){
+    const yr=startYear+y;
+    const colCount=Math.round(colsPerYear); // yaklaşık
+    const seg=document.createElement('div');
+    seg.className='yb-seg';
+    if(yr===622) seg.className+=' hicr';
+    else if(yr<622) seg.className+=' mekke';
+    else seg.className+=' medine';
+    seg.style.width=(colCount*COL_W)+'px';
+    const label=yr===622?`↓ HİCRET ${yr}`:yr%2===0?`M.S. ${yr}`:``;
+    seg.textContent=label||'';
+    ybi.appendChild(seg);
+  }
+}
+
+// ── Sahne ─────────────────────────────────────────────────────────────
+function buildScene(nuzul){
+  document.getElementById('loading').style.display='none';
+  const sc=document.getElementById('scene');
+  sc.innerHTML='';
+  nuzul.forEach((n,i)=>{
+    const sno=n.sure_no,s=SURELER[sno]||{ar:'',tr:''};
+    const med=MEDENI.has(sno),ayetler=ayetDizi(n.ayetler);
+    const col=document.createElement('div');col.className='nc';
+    col.dataset.idx=i;col.dataset.sno=sno;col.dataset.sira=n.sira;
+
+    const wrap=document.createElement('div');
+    wrap.className=`nh-wrap ${med?'medeni':'mekki'}`;
+
+    const nh=document.createElement('div');nh.className='nh';
+    nh.innerHTML=`<div class="nh-n">${n.sira}</div><div class="nh-ar">${s.ar}</div><div class="nh-tr">${s.tr}</div><div class="nh-ay">${n.ayetler}</div><div class="nih">${med?kubbe():kabe()}</div>`;
+
+    // 3D kenarlar
+    const side=document.createElement('div');side.className='nh-side';
+    const bot=document.createElement('div');bot.className='nh-bottom';
+    wrap.appendChild(nh);wrap.appendChild(side);wrap.appendChild(bot);
+
+    // TEK TIK: odaklan (zoom)
+    // ÇİFT TIK veya odaklanmışken tekrar tık: modal aç
+    let lastClick=0;
+    wrap.addEventListener('click',e=>{
+      e.stopPropagation();
+      const now=Date.now();
+      if(now-lastClick<400){
+        // çift tık → modal
+        openM(sno,ayetler[0]||1,n);
+      } else {
+        // tek tık → odaklan
+        focusCol(col,i,n);
+      }
+      lastClick=now;
+    });
+
+    col.appendChild(wrap);
+    ayetler.forEach(ano=>{
+      const p=document.createElement('div');
+      p.className=`ap ${med?'md':'mk'}`;
+      const k=`${sno}:${ano}`;
+      p.innerHTML=`<div class="ap-n">${ano}</div><div class="ap-ar">${AR[k]||'·'}</div>`;
+      p.addEventListener('click',e=>{e.stopPropagation();openM(sno,ano,n);});
+      col.appendChild(p);
+    });
+    sc.appendChild(col);
+  });
+
+  buildYearBand(nuzul.length);
+  // Sağdan başla
+  setTimeout(()=>{txOff=nuzul.length*COL_W*0.42;applyT();},80);
+}
+
+// ── Odaklanma (1. tık) ────────────────────────────────────────────────
+function focusCol(col,idx,n){
+  // Önceki odağı temizle
+  if(focusedCol&&focusedCol!==col){
+    const pw=focusedCol.querySelector('.nh-wrap');
+    if(pw)pw.classList.remove('focused');
+  }
+  const wrap=col.querySelector('.nh-wrap');
+  const isAlreadyFocused=wrap&&wrap.classList.contains('focused');
+
+  if(isAlreadyFocused){
+    // Zaten odaklanmış → modal aç
+    const sno=parseInt(col.dataset.sno);
+    const ayetler=ayetDizi(n.ayetler);
+    openM(sno,ayetler[0]||1,n);
+  } else {
+    // Odaklan + kamerayı yaklaştır
+    if(wrap)wrap.classList.add('focused');
+    focusedCol=col;
+    // Kamera: o sütuna yaklaş — txOff ve scale ayarla
+    const targetTx=-(idx*COL_W - window.innerWidth*0.38);
+    const targetScale=Math.min(1.6, scaleZ*1.25);
+    animateTo(targetTx, targetScale, 350);
+  }
+}
+
+function animateTo(targetTx, targetScale, dur){
+  const startTx=txOff, startScale=scaleZ, t0=performance.now();
+  function step(t){
+    const p=Math.min(1,(t-t0)/dur);
+    const e=1-Math.pow(1-p,3); // ease out cubic
+    txOff=startTx+(targetTx-startTx)*e;
+    scaleZ=startScale+(targetScale-startScale)*e;
+    applyT();
+    if(p<1)requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+// Sahne dışına tıklayınca odağı kaldır
+document.getElementById('vp').addEventListener('click',e=>{
+  if(!e.target.closest('.nc')){
+    if(focusedCol){
+      const pw=focusedCol.querySelector('.nh-wrap');
+      if(pw)pw.classList.remove('focused');
+      focusedCol=null;
+    }
+  }
+});
+
+// ── Sürükleme & Scroll & Trackpad ────────────────────────────────────
+function initDrag(){
+  const vp=document.getElementById('vp');
+
+  // Mouse sürükle
+  vp.addEventListener('mousedown',e=>{
+    if(e.target.closest('#ov')||e.target.closest('.nc'))return;
+    dragging=true;lx=e.clientX;velX=0;vp.style.cursor='grabbing';
+  });
+  window.addEventListener('mouseup',()=>{
+    dragging=false;
+    document.getElementById('vp').style.cursor='grab';
+    let v=velX;
+    (function inf(){if(Math.abs(v)<0.4)return;v*=0.88;txOff-=v*1.4;applyT();requestAnimationFrame(inf);})();
+  });
+  window.addEventListener('mousemove',e=>{
+    if(!dragging)return;
+    const dx=e.clientX-lx;
+    velX=dx;txOff-=dx*1.6;
+    lx=e.clientX;applyT();
+  });
+
+  // Scroll/wheel: dikey = zoom, yatay = kaydır (trackpad 2 parmak)
+  vp.addEventListener('wheel',e=>{
+    e.preventDefault();
+    if(Math.abs(e.deltaX)>Math.abs(e.deltaY)){
+      // Yatay trackpad swipe → sağa sola kaydır
+      txOff-=e.deltaX*1.8;
+    } else {
+      // Dikey scroll → zoom
+      scaleZ*=e.deltaY>0?0.92:1.09;
+      rotY=-22+((1-Math.min(scaleZ,1))*8);
+    }
+    applyT();
+    const h=document.getElementById('hint');h.style.opacity='0';
+    clearTimeout(window._ht);window._ht=setTimeout(()=>h.style.opacity='1',2500);
+  },{passive:false});
+
+  // Touch
+  let lpt=0,lpp=0;
+  vp.addEventListener('touchstart',e=>{
+    if(e.touches.length===1){lx=e.touches[0].clientX;velX=0;}
+    if(e.touches.length===2)lpp=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+  },{passive:true});
+  vp.addEventListener('touchmove',e=>{
+    e.preventDefault();
+    if(e.touches.length===1){
+      const dx=e.touches[0].clientX-lx;
+      velX=dx;txOff-=dx*1.6;lx=e.touches[0].clientX;
+    }
+    if(e.touches.length===2){
+      const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+      scaleZ*=d/lpp;lpp=d;
+    }
+    applyT();
+  },{passive:false});
+}
+
+// ── Yıldızlar ─────────────────────────────────────────────────────────
+function initStars(){
+  const cv=document.getElementById('stars');
+  function resize(){cv.width=window.innerWidth;cv.height=window.innerHeight;}
+  resize();window.addEventListener('resize',resize);
+  const ctx=cv.getContext('2d');
+  const S=Array.from({length:320},()=>({x:Math.random()*cv.width,y:Math.random()*cv.height,r:Math.random()*1.2+.2,a:Math.random(),s:Math.random()*.008+.002,d:Math.random()>.5?1:-1}));
+  const B=Array.from({length:12},()=>({x:Math.random()*cv.width,y:Math.random()*cv.height,r:Math.random()*1.8+.8,t:Math.random()*6.28,sp:Math.random()*.022+.007}));
+  function draw(){
+    ctx.clearRect(0,0,cv.width,cv.height);
+    S.forEach(s=>{s.a+=s.s*s.d;if(s.a>1||s.a<.08)s.d*=-1;ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,6.28);ctx.fillStyle=`rgba(255,255,240,${s.a*.65})`;ctx.fill();});
+    B.forEach(b=>{b.t+=b.sp;const p=Math.sin(b.t)*.5+.5;ctx.beginPath();ctx.arc(b.x,b.y,b.r*(.3+p*.7),0,6.28);ctx.fillStyle=`rgba(201,169,110,${p*.7})`;ctx.fill();});
+    requestAnimationFrame(draw);
+  }draw();
+}
+
+// ── Modal ──────────────────────────────────────────────────────────────
+async function openM(sno,ano,n){
+  cSure=sno;cAyet=ano;cNuzul=n;flipped=false;
+  document.getElementById('mflip').classList.remove('fl');
+  const s=SURELER[sno]||{ar:'',tr:''};const med=MEDENI.has(sno);
+  document.getElementById('mbdg').innerHTML=`${med?kubbe():kabe()} <span>${s.tr} · ${ano}. Ayet · Nüzul ${n.sira}</span>`;
+  const[nub,hicri,miladi]=tarihler(n.sira);
+  document.getElementById('mds').innerHTML=`<span class="dsb ds1">${nub}</span><span class="dsb ds2">${hicri}</span><span class="dsb ds3">${miladi}</span>`;
+  const k=`${sno}:${ano}`;
+  document.getElementById('mar').textContent=AR[k]||`﴿ ${ano} ﴾`;
+  document.getElementById('mml').innerHTML=TR[k]?`<div style="font-size:13.5px;line-height:1.85">${TR[k]}</div>`:'<div style="color:rgba(201,169,110,.3);font-size:11px">Yükleniyor...</div>';
+  if(!TR[k]){
+    try{const r=await fetch(`https://api.alquran.cloud/v1/ayah/${sno}:${ano}/tr.diyanet`);const d=await r.json();if(d?.data?.text)document.getElementById('mml').innerHTML=`<div style="font-size:13.5px;line-height:1.85">${d.data.text}</div>`;}catch(e){}
+  }
+  document.getElementById('ov').classList.add('open');
+  durSes();
+}
+function closeM(){document.getElementById('ov').classList.remove('open');durSes();}
+document.getElementById('ov').addEventListener('click',e=>{if(e.target===document.getElementById('ov'))closeM();});
+function flipM(){flipped=!flipped;document.getElementById('mflip').classList.toggle('fl',flipped);if(flipped)loadTef();}
+function tSayfa(d){tefIdx=Math.max(0,Math.min(tefParts.length-1,tefIdx+d));renderTef();}
+function renderTef(){
+  document.getElementById('tbod').textContent=tefParts[tefIdx]||'';
+  document.getElementById('tbod').scrollTop=0;
+  document.getElementById('tpi').textContent=`${tefIdx+1} / ${tefParts.length}`;
+  document.getElementById('tpg').disabled=tefIdx===0;
+  document.getElementById('tpi2').disabled=tefIdx===tefParts.length-1;
+  document.getElementById('tpgr').style.display=tefParts.length<=1?'none':'flex';
+}
+async function loadTef(){
+  const s=SURELER[cSure]||{tr:''};
+  document.getElementById('btit').textContent=`${s.tr} · ${cAyet}. Ayet Tefsiri`;
+  if(!tefsirTam){
+    if(tefsirYukleniyor){
+      document.getElementById('tbod').innerHTML='<div class="tload">Tefsir metni arka planda indiriliyor...<br>Lütfen birkaç saniye bekleyiniz.</div>';
+      document.getElementById('tpgr').style.display='none';
+      const wait=setInterval(()=>{if(tefsirTam){clearInterval(wait);bulTef();}},600);return;
+    }
+    document.getElementById('tbod').innerHTML='<div class="tload">Tefsir verisi yüklenemedi.</div>';
+    document.getElementById('tpgr').style.display='none';return;
+  }
+  bulTef();
+}
+function bulTef(){
+  const re=new RegExp(`###SURE:${cSure}###[\\s\\S]*?##AYET:${cAyet}(?:-\\d+)?##([\\s\\S]*?)(?=##AYET:|###SURE:|$)`);
+  const m=tefsirTam.match(re);
+  const metin=m&&m[1]?m[1].trim():'Bu ayet için tefsir verisi bulunamadı.';
+  const paras=metin.split('\n\n');tefParts=[];let p='';
+  paras.forEach(par=>{const d=p?p+'\n\n'+par:par;if(d.length>SAYFA&&p){tefParts.push(p);p=par;}else p=d;});
+  if(p)tefParts.push(p);if(!tefParts.length)tefParts=['Tefsir bulunamadı.'];
+  tefIdx=0;renderTef();
+}
+async function loadTefsir(){
+  tefsirYukleniyor=true;
+  try{const[r1,r2]=await Promise.all([fetch(PART1_URL),fetch(PART2_URL)]);const[t1,t2]=await Promise.all([r1.text(),r2.text()]);tefsirTam=t1+t2;console.log('Tefsir yüklendi:',Math.round(tefsirTam.length/1024/1024*10)/10,'MB');}
+  catch(e){console.warn('Tefsir yüklenemedi:',e.message);}
+  tefsirYukleniyor=false;
+}
+
+// ── Ses ───────────────────────────────────────────────────────────────
+function togSes(){if(window._sp)durSes();else basSes();}
+function basSes(){
+  if(!cSure||!cAyet)return;
+  const n=(cSure-1)*1000+cAyet;
+  const a=new Audio(`https://cdn.islamic.network/quran/audio/128/ar.alafasy/${n}.mp3`);
+  window._au=a;window._sp=true;
+  const btn=document.getElementById('bses');btn.textContent='⏹ Dur';btn.classList.add('pl');
+  a.play().catch(()=>{});
+  a.ontimeupdate=()=>{if(a.duration)document.getElementById('afil').style.width=(a.currentTime/a.duration*100)+'%';};
+  a.onended=()=>durSes();
+}
+function durSes(){
+  window._sp=false;if(window._au)try{window._au.pause();}catch(e){}
+  const b=document.getElementById('bses');if(b){b.textContent='▶ Dinle';b.classList.remove('pl');}
+  const f=document.getElementById('afil');if(f)f.style.width='0%';
+}
+
+// ── Arama ─────────────────────────────────────────────────────────────
+function initSearch(){
+  const inp=document.getElementById('srch'),res=document.getElementById('sr');
+  inp.addEventListener('input',()=>{
+    clearTimeout(srTimer);const q=inp.value.trim();
+    if(!q){res.classList.remove('open');return;}
+    res.innerHTML='<div class="srl">Aranıyor...</div>';res.classList.add('open');
+    srTimer=setTimeout(()=>doSearch(q),380);
+  });
+  inp.addEventListener('keydown',e=>{
+    if(e.key==='Enter'){clearTimeout(srTimer);if(inp.value.trim())doSearch(inp.value.trim());}
+    if(e.key==='Escape')res.classList.remove('open');
+  });
+  document.addEventListener('click',e=>{if(!document.getElementById('srch-wrap').contains(e.target))res.classList.remove('open');});
+}
+function doSearch(q){
+  const res=document.getElementById('sr'),ql=q.toLowerCase();const hits=[];
+  NUZUL.forEach(n=>{
+    const sno=n.sure_no,s=SURELER[sno]||{ar:'',tr:''};const ayetler=ayetDizi(n.ayetler);
+    if(s.tr.toLowerCase().includes(ql)||s.ar.includes(q)){hits.push({sno,ano:ayetler[0]||1,n,meta:`${s.tr} · Nüzul ${n.sira}`,text:`${n.ayetler}. ayetler · ${MEDENI.has(sno)?'Medeni':'Mekki'}`});}
+    ayetler.forEach(ano=>{
+      const k=`${sno}:${ano}`,meal=TR[k]||'',ar=AR[k]||'';
+      if(meal.toLowerCase().includes(ql)||ar.includes(q)){
+        const safe=q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+        const hi=meal.replace(new RegExp(`(${safe})`,'gi'),'<span class="hl">$1</span>');
+        hits.push({sno,ano,n,meta:`${s.tr} · ${ano}. ayet · Nüzul ${n.sira}`,text:hi||ar});
+      }
+    });
+  });
+  if(!hits.length){res.innerHTML='<div class="srl">Sonuç bulunamadı.</div>';return;}
+  res.innerHTML=hits.slice(0,40).map(h=>`<div class="sri" onclick="srGit(${h.sno},${h.ano},${h.n.sira})"><div class="sri-m">${h.meta}</div><div class="sri-t">${h.text}</div></div>`).join('');
+}
+function srGit(sno,ano,sira){
+  const n=NUZUL.find(x=>x.sira===sira)||NUZUL[0];
+  openM(sno,ano,n);
+  document.getElementById('sr').classList.remove('open');
+  document.getElementById('srch').value='';
+  const idx=NUZUL.findIndex(x=>x.sira===sira);
+  if(idx>=0)animateTo(-(idx*COL_W-window.innerWidth*.38),Math.max(scaleZ,1.1),400);
+}
+
+// ── Başlat ────────────────────────────────────────────────────────────
+async function init(){
+  initStars();initDrag();initSearch();applyT();
+  try{
+    const r=await fetch(NUZUL_URL);NUZUL=await r.json();buildScene(NUZUL);
+  }catch(e){
+    document.getElementById('loading').innerHTML='<div style="color:rgba(201,169,110,.5);font-size:12px;text-align:center">Veri yüklenemedi.</div>';console.error(e);
+  }
+  loadTefsir();
+}
+init();
+</script>
+</body>
+</html>
