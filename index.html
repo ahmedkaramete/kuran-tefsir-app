@@ -383,6 +383,20 @@ function animateTo(targetTx,targetTy,targetScale,dur,onDone){
   animFrame=requestAnimationFrame(step);
 }
 
+
+// ── SÜTUN ORTALA ──────────────────────────────────────────────────────
+function ortalaCol(colX, hedefFersah, dur) {
+  const vp = document.getElementById('vp');
+  const vpW = vp.clientWidth, vpH = vp.clientHeight;
+  hedefFersah = Math.max(1, Math.min(FERSAH_SAYISI, hedefFersah || fersah));
+  const hScale = fersahToScale(hedefFersah);
+  const cx = colX + COL_W / 2;
+  const tTx = vpW / 2 - cx * hScale;
+  const tTy = Math.max(vpH * 0.08, ty);
+  fersah = hedefFersah;
+  animateTo(tTx, tTy, hScale, dur || 600);
+}
+
 // ── FIT ALL ───────────────────────────────────────────────────────────
 function fitAll(){
   const N=NUZUL.length;if(!N)return;
