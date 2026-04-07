@@ -324,8 +324,12 @@ function vpSize(){const v=document.getElementById('vp');return{w:v.clientWidth,h
 function kabe(){return`<svg width="12" height="12" viewBox="0 0 13 13"><rect x="1.5" y="3.5" width="10" height="8" rx=".5" fill="rgba(201,169,110,.85)"/><rect x="3.5" y="6.5" width="2.2" height="5" rx=".3" fill="rgba(0,0,12,.6)"/><line x1="0" y1="3.5" x2="13" y2="3.5" stroke="rgba(201,169,110,.5)" stroke-width=".8"/></svg>`}
 function kubbe(){return`<svg width="12" height="12" viewBox="0 0 13 13"><path d="M1.5 9.5 Q6.5 1.5 11.5 9.5Z" fill="rgba(80,190,140,.85)"/><rect x="1.5" y="9.5" width="10" height="3" rx=".3" fill="rgba(80,190,140,.75)"/><line x1="6.5" y1="1.5" x2="6.5" y2=".2" stroke="rgba(80,190,140,.85)" stroke-width=".8"/></svg>`}
 function tarihler(s){
-  const nub=s<=1?"Nübüvvet 1. Yıl":`Nübüvvet ~${Math.min(13,Math.ceil(s/12))}. Yıl`;
-  const hicri=s<=80?"Hicret Öncesi":`H. ${Math.ceil((s-80)/18)+1}. Yıl`;
+  const nubYil=s<=1?1:Math.min(13,Math.ceil(s/12));
+  const nub=`Nübüvvet ${nubYil}. Yıl`;
+  // Hicret öncesi: 622-nuzulYili = kaç yıl kalmış
+  // yaklaşık: sira 1=610, sira 80=622 → sira başına ~0.15 yıl
+  const hicretOnceYil=s<=80?Math.round((80-s)/80*13)+1:0;
+  const hicri=s<=80?`Hicret Öncesi ${hicretOnceYil}. Yıl`:`H. ${Math.ceil((s-80)/18)+1}. Yıl`;
   const miladi=s<=1?"M.S. ~610":s<=80?`M.S. ~${610+Math.floor(s/10)}`:`M.S. ~${622+Math.ceil((s-80)/18)}`;
   return[nub,hicri,miladi];
 }
@@ -399,6 +403,21 @@ function zoomPivot(yeniFersah,pivotX,pivotY,dur){
   const hty=pivotY-wy*yeniScale;
   fersah=yeniFersah;
   animateTo(htx,hty,yeniScale,dur||350);
+}
+
+// Yıl bandı için tarih hesaplama
+function ybTarihler(yr, startCol, N) {
+  // Nübüvvet yılı: 610=1, 622=13
+  const nubYil = yr <= 622 ? (yr - 610 + 1) : null;
+  const nub = nubYil ? `Nübüvvet ${nubYil}. Yıl` : `Nübüvvet Sonrası`;
+  // Hicri
+  const hicriOnce = yr < 622 ? (622 - yr) : null;
+  const hicriSonra = yr >= 622 ? (yr - 622) : null;
+  const hicri = yr === 622 ? 'Hicret Yılı' :
+    hicriOnce ? `Hicret Öncesi ${hicriOnce}. Yıl` :
+    `Hicret Sonrası ${hicriSonra}. Yıl`;
+  const miladi = `M.S. ${yr}`;
+  return {nub, hicri, miladi};
 }
 
 // ── YIL BANDI ─────────────────────────────────────────────────────────
@@ -513,6 +532,7 @@ function buildScene(nuzul){
     ayetler.forEach(ano=>{
       const p=document.createElement('div');
       p.className='ap '+(med?'md':'mk');
+      p.style.display='none'; // başlangıçta gizli, 5. fersahta açılır
       const k=`${sno}:${ano}`;
       p.innerHTML=`<div class="ap-n">${ano}</div><div class="ap-ar">${AR[k]||'·'}</div>`;
       let amdX=0,amdY=0,aLastTik=0;
