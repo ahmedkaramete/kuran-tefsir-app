@@ -505,7 +505,7 @@ function buildScene(nuzul){
     wrap.className='nh-wrap';
     const nh=document.createElement('div');
     nh.className='nh '+(med?'medeni':'mekki');
-    nh.innerHTML=`<div class="nh-n">${n.sira}</div><div class="nh-ar">${s.ar}</div><div class="nh-tr">${s.tr}</div><div class="nh-ay">${n.ayetler}</div><div class="nih">${med?kubbe():kabe()}</div>`;
+    nh.innerHTML=`<div class="nh-ust"><div class="nh-n">${n.sira}</div><div class="nh-ar">${s.ar}</div><div class="nh-tr">${s.tr}</div></div><div class="nh-alt"><div class="nh-ay">${n.ayetler}</div><div class="nih">${med?kubbe():kabe()}</div></div>`;
 
     // Tık: 5px eşik, tek tık modal, çift tık zoom
     let mdX=0,mdY=0,lastTik=0;
@@ -602,6 +602,42 @@ function siraDegis(sira){
     col.style.left=newX+'px';
   });
   setTimeout(()=>cols.forEach(col=>col.style.transition=''),2100);
+}
+
+
+// ── AKORDIYON: AYET KARTLARI ─────────────────────────────────────────
+let acikSutun = null;
+
+function toggleAyetler(col, colX) {
+  const world = document.getElementById('world');
+  const tumApler = world.querySelectorAll('.ap');
+  const buSutunApler = col.querySelectorAll('.ap');
+  const acikMi = buSutunApler.length > 0 && buSutunApler[0].style.display !== 'none';
+
+  // Önce tümünü kapat
+  tumApler.forEach(p => {
+    p.style.display = 'none';
+    p.style.opacity = '0';
+  });
+  acikSutun = null;
+
+  if (!acikMi) {
+    // Bu sütunu aç — animasyonlu
+    acikSutun = col;
+    buSutunApler.forEach((p, i) => {
+      p.style.display = 'flex';
+      p.style.opacity = '0';
+      p.style.transform = 'translateY(-8px)';
+      setTimeout(() => {
+        p.style.transition = 'opacity .25s, transform .25s';
+        p.style.opacity = '1';
+        p.style.transform = '';
+      }, i * 30);
+    });
+    // 5. fersahtan uzaktaysa yaklaş
+    if (fersah > 5) ortalaCol(colX, 5, 600);
+    else ortalaCol(colX, fersah, 400);
+  }
 }
 
 // ── PAN & SCROLL ──────────────────────────────────────────────────────
