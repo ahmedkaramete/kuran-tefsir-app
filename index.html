@@ -545,138 +545,11 @@ function buildYearBand(N) {
 }
 
 
-// ── SIRA DEĞİŞTİRME ──────────────────────────────────────────────────
-let aktifSira = 'nuzul';
-
-// Mushaf sırası için sure verileri
-const MUSHAF_SURELER_AYETLER = {
-  1:7,2:286,3:200,4:176,5:120,6:165,7:206,8:75,9:129,10:109,
-  11:123,12:111,13:43,14:52,15:99,16:128,17:111,18:110,19:98,20:135,
-  21:112,22:78,23:118,24:64,25:77,26:227,27:93,28:88,29:69,30:60,
-  31:34,32:30,33:73,34:54,35:45,36:83,37:182,38:88,39:75,40:85,
-  41:54,42:53,43:89,44:59,45:37,46:35,47:38,48:29,49:18,50:45,
-  51:60,52:49,53:62,54:55,55:78,56:96,57:29,58:22,59:24,60:13,
-  61:14,62:11,63:11,64:18,65:12,66:12,67:30,68:52,69:52,70:44,
-  71:28,72:28,73:20,74:56,75:40,76:31,77:50,78:40,79:46,80:42,
-  81:29,82:19,83:36,84:25,85:22,86:17,87:19,88:26,89:30,90:20,
-  91:15,92:21,93:11,94:8,95:8,96:19,97:5,98:8,99:8,100:11,
-  101:11,102:8,103:3,104:9,105:5,106:4,107:7,108:3,109:6,110:3,
-  111:5,112:4,113:5,114:6
-};
-
-function setSira(tip) {
-  aktifSira = tip;
-  // Buton stillerini güncelle
-  document.getElementById('btn-nuzul').style.background = tip==='nuzul' ? 'rgba(201,169,110,.18)' : 'rgba(201,169,110,.05)';
-  document.getElementById('btn-nuzul').style.color = tip==='nuzul' ? '#c9a96e' : 'rgba(201,169,110,.55)';
-  document.getElementById('btn-nuzul').style.borderColor = tip==='nuzul' ? 'rgba(201,169,110,.5)' : 'rgba(201,169,110,.2)';
-  document.getElementById('btn-mushaf').style.background = tip==='mushaf' ? 'rgba(201,169,110,.18)' : 'rgba(201,169,110,.05)';
-  document.getElementById('btn-mushaf').style.color = tip==='mushaf' ? '#c9a96e' : 'rgba(201,169,110,.55)';
-  document.getElementById('btn-mushaf').style.borderColor = tip==='mushaf' ? 'rgba(201,169,110,.5)' : 'rgba(201,169,110,.2)';
-
-  if (tip === 'nuzul') {
-    buildScene(NUZUL);
-  } else {
-    buildMushaf();
-  }
-}
-
-function buildMushaf() {
-  document.getElementById('loading').style.display = 'none';
-  const world = document.getElementById('world');
-  const N = 114; // toplam sure sayısı
-
-  // Animasyonlu geçiş: mevcut kartları soldur, yenilerini göster
-  world.style.transition = 'opacity 0.4s';
-  world.style.opacity = '0';
-
-  setTimeout(() => {
-    world.innerHTML = '';
-
-    for (let sno = 1; sno <= 114; sno++) {
-      const s = SURELER[sno] || {ar:'',tr:''};
-      const med = MEDENI.has(sno);
-      const ayetSayisi = MUSHAF_SURELER_AYETLER[sno] || 0;
-      // Gösterilecek ilk 10 ayet
-      const ayetler = Array.from({length: Math.min(10, ayetSayisi)}, (_,i) => i+1);
-
-      // Sağdan sola: sure 1 (Fatiha) en sağda → konum (N-1-0)*COL_W = 113*COL_W
-      // Sure sno'nun konumu: (N - sno) * COL_W  (sno=1 → sağda, sno=114 → solda)
-      const colWorldX = (N - sno) * COL_W;
-
-      const col = document.createElement('div');
-      col.className = 'nc';
-      col.style.left = colWorldX + 'px';
-      col.style.top = (YB_H + 2) + 'px';
-
-      const nh = document.createElement('div');
-      nh.className = 'nh ' + (med ? 'medeni' : 'mekki');
-      nh.innerHTML = `<div class="nh-n">${sno}</div><div class="nh-ar">${s.ar}</div><div class="nh-tr">${s.tr}</div><div class="nh-ay">${ayetSayisi} ayet</div><div class="nih">${med?kubbe():kabe()}</div>`;
-
-      let mdX=0, mdY=0, nhLastTik=0;
-      nh.addEventListener('mousedown', e => { mdX=e.clientX; mdY=e.clientY; });
-      nh.addEventListener('click', e => {
-        e.stopPropagation();
-        if(Math.abs(e.clientX-mdX)>5||Math.abs(e.clientY-mdY)>5) return;
-        const now=Date.now(); const cift=now-nhLastTik<400; nhLastTik=now;
-        tikZoom(colWorldX, sno-1, {sira:sno, sure_no:sno, ayetler:'1-'+ayetSayisi}, sno, ayetler, cift?3:1);
-      });
-
-      col.appendChild(nh);
-      ayetler.forEach(ano => {
-        const p = document.createElement('div');
-        p.className = 'ap ' + (med ? 'md' : 'mk');
-        const k = `${sno}:${ano}`;
-        p.innerHTML = `<div class="ap-n">${ano}</div><div class="ap-ar">${AR[k]||'·'}</div>`;
-        let amdX=0, amdY=0;
-        p.addEventListener('mousedown', e => { amdX=e.clientX; amdY=e.clientY; });
-        p.addEventListener('click', e => {
-          e.stopPropagation();
-          if(Math.abs(e.clientX-amdX)>5||Math.abs(e.clientY-amdY)>5) return;
-          if(fersah<=5) openM(sno,ano,{sira:sno,sure_no:sno,ayetler:'1-'+ayetSayisi});
-          else tikZoom(colWorldX,sno-1,{sira:sno,sure_no:sno,ayetler:'1-'+ayetSayisi},sno,ayetler,1);
-        });
-        col.appendChild(p);
-      });
-      world.appendChild(col);
-    }
-
-    // Yıl bandını mushaf için gizle — sıra bant yok
-    buildYearBandMushaf(N);
-    totalCols = N;
-    fitAll();
-
-    // Fade in
-    world.style.opacity = '1';
-  }, 400);
-}
-
-function buildYearBandMushaf(N) {
-  const yb = document.getElementById('year-band');
-  yb.innerHTML = '';
-  yb.style.width = (N * COL_W) + 'px';
-  // Mushaf sırası için basit bant — Mekki/Medeni göster
-  // 4 büyük dönem: Fatiha, Bakara-Tevbe (Medine başı), geri kalan Mekki/Medeni
-  const seg = document.createElement('div');
-  seg.className = 'yb-seg yb-mekke';
-  seg.style.width = (N * COL_W) + 'px';
-  seg.style.height = YB_H + 'px';
-  seg.textContent = 'MUSHAF SIRASI · الترتيب المصحفي';
-  seg.style.fontSize = '16px';
-  seg.style.justifyContent = 'center';
-  yb.appendChild(seg);
-}
-
-
 // ── SAHNE ────────────────────────────────────────────────────────────
 function buildScene(nuzul) {
   document.getElementById('loading').style.display = 'none';
   const world = document.getElementById('world');
-  // Fade geçişi
-  world.style.transition = 'opacity 0.4s';
-  world.style.opacity = '0';
-  setTimeout(() => {
-    world.innerHTML = '';
+  world.innerHTML = '';
   const N = nuzul.length;
   totalCols = N;
 
@@ -887,9 +760,11 @@ async function openM(sno, ano, n) {
   document.getElementById('mds').innerHTML = `<span class="dsb ds1">${nub}</span><span class="dsb ds2">${hicri}</span><span class="dsb ds3">${miladi}</span>`;
   const k = `${sno}:${ano}`;
   document.getElementById('mar').textContent = AR[k] || `﴿ ${ano} ﴾`;
-  document.getElementById('mml').innerHTML = TR[k]
-    ? `<div style="font-size:13.5px;line-height:1.85">${TR[k]}</div>`
-    : '<div style="color:rgba(201,169,110,.3);font-size:11px">Yükleniyor...</div>';
+  if(TR[k]) {
+    document.getElementById('mml').innerHTML = '<div style="font-size:13.5px;line-height:1.85">' + TR[k] + '</div>';
+  } else {
+    document.getElementById('mml').innerHTML = '<div style="color:rgba(201,169,110,.3);font-size:11px">Yükleniyor...</div>';
+  }
   document.getElementById('ov').classList.add('open');
   durSes();
   if (!TR[k]) {
