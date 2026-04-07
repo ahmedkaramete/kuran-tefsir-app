@@ -605,41 +605,6 @@ function siraDegis(sira){
 }
 
 
-// ── AKORDIYON: AYET KARTLARI ─────────────────────────────────────────
-let acikSutun = null;
-
-function toggleAyetler(col, colX) {
-  const world = document.getElementById('world');
-  const tumApler = world.querySelectorAll('.ap');
-  const buSutunApler = col.querySelectorAll('.ap');
-  const acikMi = buSutunApler.length > 0 && buSutunApler[0].style.display !== 'none';
-
-  // Önce tümünü kapat
-  tumApler.forEach(p => {
-    p.style.display = 'none';
-    p.style.opacity = '0';
-  });
-  acikSutun = null;
-
-  if (!acikMi) {
-    // Bu sütunu aç — animasyonlu
-    acikSutun = col;
-    buSutunApler.forEach((p, i) => {
-      p.style.display = 'flex';
-      p.style.opacity = '0';
-      p.style.transform = 'translateY(-8px)';
-      setTimeout(() => {
-        p.style.transition = 'opacity .25s, transform .25s';
-        p.style.opacity = '1';
-        p.style.transform = '';
-      }, i * 30);
-    });
-    // 5. fersahtan uzaktaysa yaklaş
-    if (fersah > 5) ortalaCol(colX, 5, 600);
-    else ortalaCol(colX, fersah, 400);
-  }
-}
-
 // ── PAN & SCROLL ──────────────────────────────────────────────────────
 function initInteraction(){
   const vp=document.getElementById('vp');
@@ -841,3 +806,37 @@ init();
 </script>
 </body>
 </html>
+// ── AKORDIYON: AYET KARTLARI ─────────────────────────────────────────
+let acikSutun = null;
+
+function toggleAyetler(col, colX) {
+  const world = document.getElementById('world');
+  const tumApler = world.querySelectorAll('.ap');
+  const buSutunApler = col.querySelectorAll('.ap');
+  const acikMi = buSutunApler.length > 0 && buSutunApler[0].style.display !== 'none';
+
+  // Önce tümünü kapat
+  tumApler.forEach(p => {
+    p.style.display = 'none';
+    p.style.opacity = '0';
+  });
+  acikSutun = null;
+
+  if (!acikMi) {
+    // Bu sütunu aç — animasyonlu
+    acikSutun = col;
+    buSutunApler.forEach((p, i) => {
+      p.style.display = 'flex';
+      p.style.opacity = '0';
+      p.style.transform = 'translateY(-8px)';
+      setTimeout(() => {
+        p.style.transition = 'opacity .25s, transform .25s';
+        p.style.opacity = '1';
+        p.style.transform = '';
+      }, i * 30);
+    });
+    // 5. fersahtan uzaktaysa yaklaş
+    if (fersah > 5) ortalaCol(colX, 5, 600);
+    else ortalaCol(colX, fersah, 400);
+  }
+}
