@@ -37,6 +37,13 @@ canvas#stars{position:absolute;inset:0;pointer-events:none;z-index:0}
 .srl{padding:10px;text-align:center;color:rgba(201,169,110,.38);font-size:11px}
 
 /* TÜMÜNÜ GÖSTER BUTONU */
+.btn-sira{
+  background:rgba(255,255,255,.04);border:.5px solid rgba(255,255,255,.15);
+  border-radius:16px;color:rgba(255,255,255,.45);padding:5px 12px;font-size:10px;
+  cursor:pointer;white-space:nowrap;transition:all .2s;
+}
+.btn-sira:hover{background:rgba(201,169,110,.12);border-color:rgba(201,169,110,.4);color:#c9a96e}
+.btn-sira.aktif{background:rgba(201,169,110,.14);border-color:rgba(201,169,110,.6);color:#c9a96e}
 #btn-fit{
   background:rgba(201,169,110,.1);
   border:.5px solid rgba(201,169,110,.35);
@@ -59,13 +66,13 @@ canvas#stars{position:absolute;inset:0;pointer-events:none;z-index:0}
 /* YIL BANDI */
 #year-band{
   position:absolute;top:0;left:0;
-  height:32px;
+  height:160px;
   display:flex;flex-direction:row;
   pointer-events:none;z-index:5;
   transform-origin:left top;
 }
 .yb-seg{
-  flex-shrink:0;height:32px;
+  flex-shrink:0;height:160px;
   display:flex;align-items:center;padding:0 6px;
   font-size:8.5px;letter-spacing:.4px;
   border-right:1px solid rgba(201,169,110,.12);
@@ -202,7 +209,15 @@ canvas#stars{position:absolute;inset:0;pointer-events:none;z-index:0}
       <input id="srch" type="text" placeholder="Sure, ayet veya meal ara..." autocomplete="off">
       <div id="sr"></div>
     </div>
-    <button id="btn-fit" onclick="fitTumunuGoster()">⊡ Tümünü Göster</button>
+    <div style="display:flex;gap:6px;flex-shrink:0;align-items:center">
+      <button class="btn-sira" id="btn-nuzul" onclick="siraDegis('nuzul')">Nüzul Sırası</button>
+      <button class="btn-sira" id="btn-mushaf" onclick="siraDegis('mushaf')">Mushaf Sırası</button>
+      <div style="display:flex;gap:6px;flex-shrink:0;align-items:center">
+      <button id="btn-nuzul" onclick="setSira('nuzul')" style="background:rgba(201,169,110,.18);border:.5px solid rgba(201,169,110,.5);border-radius:6px;color:#c9a96e;padding:5px 10px;font-size:10px;cursor:pointer;">نزول · Nüzul</button>
+      <button id="btn-mushaf" onclick="setSira('mushaf')" style="background:rgba(201,169,110,.05);border:.5px solid rgba(201,169,110,.2);border-radius:6px;color:rgba(201,169,110,.55);padding:5px 10px;font-size:10px;cursor:pointer;">مصحف · Mushaf</button>
+      <button id="btn-fit" onclick="fitAll()" style="background:rgba(201,169,110,.1);border:.5px solid rgba(201,169,110,.3);border-radius:6px;color:#c9a96e;padding:5px 10px;font-size:10px;cursor:pointer;white-space:nowrap;">⊞ Tümünü Göster</button>
+    </div>
+    </div>
   </div>
 
   <div id="fersah">13. FERSAH</div>
@@ -234,7 +249,7 @@ canvas#stars{position:absolute;inset:0;pointer-events:none;z-index:0}
           <div class="mar" id="mar"></div>
           <div class="mml" id="mml"></div>
           <div class="mact">
-            <button class="bt" onclick="flipM()">Tefsir Görüntüle</button>
+            <!-- Tefsir şimdilik devre dışı -->
             <button class="bs" id="bses" onclick="togSes()">▶ Dinle</button>
           </div>
           <div class="abar"><div class="afil" id="afil"></div></div>
@@ -338,14 +353,14 @@ const TR = {
 // scale değerleri: fersah 21 → fitScale, fersah 1 → fitScale * 20^(20/20) gibi
 // Logaritmik: her fersah bir öncekinin 1.18 katı daha büyük
 const FERSAH_SAYISI = 13;
-const ZOOM_CARPAN = 1.20; // her kademe bu kadar büyür
+const ZOOM_CARPAN = 1.30; // her kademe bu kadar büyür
 let fitScale = 1; // 21. fersah scale değeri (buildScene'de hesaplanır)
 let fersah = 21;  // mevcut fersah (21=uzak, 1=yakın)
 let scale = 1;
 let tx = 0, ty = 0; // world'ün ekrandaki konumu
 
 const COL_W = 72;
-const YB_H = 32;
+const YB_H = 160; // yıl bandı yüksekliği
 let NUZUL = [];
 let totalCols = 0;
 
@@ -400,26 +415,29 @@ function animateTo(targetTx, targetTy, targetScale, targetFersah, dur, cb) {
 
 // ── TIK: YAKINLAŞ + ORTALA ─────────────────────────────────────────
 function tikZoom(colX, colIdx, nuzulData, sno, ayetler, adim) {
-  adim = adim || 1;
   const vp = document.getElementById('vp');
   const vpW = vp.clientWidth;
   const vpH = vp.clientHeight;
+  const colCenterX = colX + COL_W / 2;
 
-  // 1-5. fersahtaysa kart aç (çift tık)
-  if (fersah <= 5 && adim >= 2) {
-    openM(sno, ayetler[0] || 1, nuzulData);
+  // 1-5. fersahtaysa: çift tık kart aç, tek tık ortala
+  if (fersah <= 5) {
+    if (adim >= 2) {
+      openM(sno, ayetler[0] || 1, nuzulData);
+    } else {
+      const hedefTx = vpW / 2 - colCenterX * scale;
+      const hedefTy = Math.max(vpH * 0.08, ty);
+      animateTo(hedefTx, hedefTy, scale, fersah, 500);
+    }
     return;
   }
 
-  // adim kadar yaklaş (en az 1. fersah)
-  const yeniFersah = Math.max(1, fersah - adim);
-  const yeniScale = fersahToScale(yeniFersah);
-
-  // Tıklanan sütunun ortasını ekran ortasına getir
-  const colCenterX = colX + COL_W / 2;
-  const hedefTx = vpW / 2 - colCenterX * yeniScale;
+  // Uzaktaysa: direkt 5. fersaha git, tıklanan noktayı ortala
+  const hedefFersah = 5;
+  const hedefScale = fersahToScale(hedefFersah);
+  const hedefTx = vpW / 2 - colCenterX * hedefScale;
   const hedefTy = Math.max(vpH * 0.08, ty);
-  animateTo(hedefTx, hedefTy, yeniScale, yeniFersah, 900);
+  animateTo(hedefTx, hedefTy, hedefScale, hedefFersah, 900);
 }
 
 // ── TÜMÜNÜ GÖSTER (21. FERSAH) ───────────────────────────────────────
@@ -450,20 +468,23 @@ function handleScroll(e, vpRect) {
   }
 
   // Dikey → zoom (throttle: 250ms arayla kademe)
-  if (now - lastScrollTime < 220) return;
+  if (now - lastScrollTime < 120) return;
   lastScrollTime = now;
 
   // Pivot: farenin olduğu nokta
   const px = e.clientX - vpRect.left;
   const py = e.clientY - vpRect.top;
 
-  if (dy > 0) {
-    // Zoom out
+  // dy > 0: aşağı scroll = zoom out (uzaklaş, fersah artar)
+  // dy < 0: yukarı scroll = zoom in (yaklaş, fersah azalır)
+  const normalized = dy > 0 ? 1 : -1;
+  if (normalized > 0) {
+    // Zoom out — uzaklaş
     if (fersah >= 13) return;
     const yeniFersah = Math.min(13, fersah + 1);
     zoomPivot(yeniFersah, px, py, 280);
   } else {
-    // Zoom in
+    // Zoom in — yaklaş
     if (fersah <= 1) return;
     const yeniFersah = Math.max(1, fersah - 1);
     zoomPivot(yeniFersah, px, py, 280);
@@ -523,11 +544,139 @@ function buildYearBand(N) {
   }
 }
 
+
+// ── SIRA DEĞİŞTİRME ──────────────────────────────────────────────────
+let aktifSira = 'nuzul';
+
+// Mushaf sırası için sure verileri
+const MUSHAF_SURELER_AYETLER = {
+  1:7,2:286,3:200,4:176,5:120,6:165,7:206,8:75,9:129,10:109,
+  11:123,12:111,13:43,14:52,15:99,16:128,17:111,18:110,19:98,20:135,
+  21:112,22:78,23:118,24:64,25:77,26:227,27:93,28:88,29:69,30:60,
+  31:34,32:30,33:73,34:54,35:45,36:83,37:182,38:88,39:75,40:85,
+  41:54,42:53,43:89,44:59,45:37,46:35,47:38,48:29,49:18,50:45,
+  51:60,52:49,53:62,54:55,55:78,56:96,57:29,58:22,59:24,60:13,
+  61:14,62:11,63:11,64:18,65:12,66:12,67:30,68:52,69:52,70:44,
+  71:28,72:28,73:20,74:56,75:40,76:31,77:50,78:40,79:46,80:42,
+  81:29,82:19,83:36,84:25,85:22,86:17,87:19,88:26,89:30,90:20,
+  91:15,92:21,93:11,94:8,95:8,96:19,97:5,98:8,99:8,100:11,
+  101:11,102:8,103:3,104:9,105:5,106:4,107:7,108:3,109:6,110:3,
+  111:5,112:4,113:5,114:6
+};
+
+function setSira(tip) {
+  aktifSira = tip;
+  // Buton stillerini güncelle
+  document.getElementById('btn-nuzul').style.background = tip==='nuzul' ? 'rgba(201,169,110,.18)' : 'rgba(201,169,110,.05)';
+  document.getElementById('btn-nuzul').style.color = tip==='nuzul' ? '#c9a96e' : 'rgba(201,169,110,.55)';
+  document.getElementById('btn-nuzul').style.borderColor = tip==='nuzul' ? 'rgba(201,169,110,.5)' : 'rgba(201,169,110,.2)';
+  document.getElementById('btn-mushaf').style.background = tip==='mushaf' ? 'rgba(201,169,110,.18)' : 'rgba(201,169,110,.05)';
+  document.getElementById('btn-mushaf').style.color = tip==='mushaf' ? '#c9a96e' : 'rgba(201,169,110,.55)';
+  document.getElementById('btn-mushaf').style.borderColor = tip==='mushaf' ? 'rgba(201,169,110,.5)' : 'rgba(201,169,110,.2)';
+
+  if (tip === 'nuzul') {
+    buildScene(NUZUL);
+  } else {
+    buildMushaf();
+  }
+}
+
+function buildMushaf() {
+  document.getElementById('loading').style.display = 'none';
+  const world = document.getElementById('world');
+  const N = 114; // toplam sure sayısı
+
+  // Animasyonlu geçiş: mevcut kartları soldur, yenilerini göster
+  world.style.transition = 'opacity 0.4s';
+  world.style.opacity = '0';
+
+  setTimeout(() => {
+    world.innerHTML = '';
+
+    for (let sno = 1; sno <= 114; sno++) {
+      const s = SURELER[sno] || {ar:'',tr:''};
+      const med = MEDENI.has(sno);
+      const ayetSayisi = MUSHAF_SURELER_AYETLER[sno] || 0;
+      // Gösterilecek ilk 10 ayet
+      const ayetler = Array.from({length: Math.min(10, ayetSayisi)}, (_,i) => i+1);
+
+      // Sağdan sola: sure 1 (Fatiha) en sağda → konum (N-1-0)*COL_W = 113*COL_W
+      // Sure sno'nun konumu: (N - sno) * COL_W  (sno=1 → sağda, sno=114 → solda)
+      const colWorldX = (N - sno) * COL_W;
+
+      const col = document.createElement('div');
+      col.className = 'nc';
+      col.style.left = colWorldX + 'px';
+      col.style.top = (YB_H + 2) + 'px';
+
+      const nh = document.createElement('div');
+      nh.className = 'nh ' + (med ? 'medeni' : 'mekki');
+      nh.innerHTML = `<div class="nh-n">${sno}</div><div class="nh-ar">${s.ar}</div><div class="nh-tr">${s.tr}</div><div class="nh-ay">${ayetSayisi} ayet</div><div class="nih">${med?kubbe():kabe()}</div>`;
+
+      let mdX=0, mdY=0, nhLastTik=0;
+      nh.addEventListener('mousedown', e => { mdX=e.clientX; mdY=e.clientY; });
+      nh.addEventListener('click', e => {
+        e.stopPropagation();
+        if(Math.abs(e.clientX-mdX)>5||Math.abs(e.clientY-mdY)>5) return;
+        const now=Date.now(); const cift=now-nhLastTik<400; nhLastTik=now;
+        tikZoom(colWorldX, sno-1, {sira:sno, sure_no:sno, ayetler:'1-'+ayetSayisi}, sno, ayetler, cift?3:1);
+      });
+
+      col.appendChild(nh);
+      ayetler.forEach(ano => {
+        const p = document.createElement('div');
+        p.className = 'ap ' + (med ? 'md' : 'mk');
+        const k = `${sno}:${ano}`;
+        p.innerHTML = `<div class="ap-n">${ano}</div><div class="ap-ar">${AR[k]||'·'}</div>`;
+        let amdX=0, amdY=0;
+        p.addEventListener('mousedown', e => { amdX=e.clientX; amdY=e.clientY; });
+        p.addEventListener('click', e => {
+          e.stopPropagation();
+          if(Math.abs(e.clientX-amdX)>5||Math.abs(e.clientY-amdY)>5) return;
+          if(fersah<=5) openM(sno,ano,{sira:sno,sure_no:sno,ayetler:'1-'+ayetSayisi});
+          else tikZoom(colWorldX,sno-1,{sira:sno,sure_no:sno,ayetler:'1-'+ayetSayisi},sno,ayetler,1);
+        });
+        col.appendChild(p);
+      });
+      world.appendChild(col);
+    }
+
+    // Yıl bandını mushaf için gizle — sıra bant yok
+    buildYearBandMushaf(N);
+    totalCols = N;
+    fitAll();
+
+    // Fade in
+    world.style.opacity = '1';
+  }, 400);
+}
+
+function buildYearBandMushaf(N) {
+  const yb = document.getElementById('year-band');
+  yb.innerHTML = '';
+  yb.style.width = (N * COL_W) + 'px';
+  // Mushaf sırası için basit bant — Mekki/Medeni göster
+  // 4 büyük dönem: Fatiha, Bakara-Tevbe (Medine başı), geri kalan Mekki/Medeni
+  const seg = document.createElement('div');
+  seg.className = 'yb-seg yb-mekke';
+  seg.style.width = (N * COL_W) + 'px';
+  seg.style.height = YB_H + 'px';
+  seg.textContent = 'MUSHAF SIRASI · الترتيب المصحفي';
+  seg.style.fontSize = '16px';
+  seg.style.justifyContent = 'center';
+  yb.appendChild(seg);
+}
+
+
 // ── SAHNE ────────────────────────────────────────────────────────────
 function buildScene(nuzul) {
   document.getElementById('loading').style.display = 'none';
   const world = document.getElementById('world');
-  world.innerHTML = '';
+  // Fade geçişi
+  world.style.transition = 'opacity 0.4s';
+  world.style.opacity = '0';
+  setTimeout(() => {
+    world.innerHTML = '';
   const N = nuzul.length;
   totalCols = N;
 
@@ -794,15 +943,8 @@ function bulTef() {
   if (!tefParts.length) tefParts = ['Tefsir bulunamadı.'];
   tefIdx = 0; renderTef();
 }
-async function loadTefsir() {
-  tefsirYukleniyor = true;
-  try {
-    const [r1, r2] = await Promise.all([fetch(PART1_URL), fetch(PART2_URL)]);
-    const [t1, t2] = await Promise.all([r1.text(), r2.text()]);
-    tefsirTam = t1 + t2;
-    console.log('Tefsir yüklendi:', Math.round(tefsirTam.length / 1024 / 1024 * 10) / 10, 'MB');
-  } catch(e) { console.warn('Tefsir yüklenemedi:', e.message); }
-  tefsirYukleniyor = false;
+async function loadTefsir(){
+  return; // Şimdilik devre dışı
 }
 
 // ── SES ──────────────────────────────────────────────────────────────
@@ -873,6 +1015,66 @@ function srGit(sno, ano, sira) {
   }
 }
 
+
+// ── SIRA DEĞİŞTİRME ──────────────────────────────────────────────────
+let aktifSira = 'nuzul';
+function initSiraBtnlari() {
+  document.getElementById('btn-nuzul').classList.add('aktif');
+}
+
+// Mushaf sırası için sure ayet sayıları
+const AYET_SAYISI = {
+  1:7,2:286,3:200,4:176,5:120,6:165,7:206,8:75,9:129,10:109,
+  11:123,12:111,13:43,14:52,15:99,16:128,17:111,18:110,19:98,20:135,
+  21:112,22:78,23:118,24:64,25:77,26:227,27:93,28:88,29:69,30:60,
+  31:34,32:30,33:73,34:54,35:45,36:83,37:182,38:88,39:75,40:85,
+  41:54,42:53,43:89,44:59,45:37,46:35,47:38,48:29,49:18,50:45,
+  51:60,52:49,53:62,54:55,55:78,56:96,57:29,58:22,59:24,60:13,
+  61:14,62:11,63:11,64:18,65:12,66:12,67:30,68:52,69:52,70:44,
+  71:28,72:28,73:20,74:56,75:40,76:31,77:50,78:40,79:46,80:42,
+  81:29,82:19,83:36,84:25,85:22,86:17,87:19,88:26,89:30,90:20,
+  91:15,92:21,93:11,94:8,95:8,96:19,97:5,98:8,99:8,100:11,
+  101:11,102:8,103:3,104:9,105:5,106:4,107:7,108:3,109:6,110:3,
+  111:5,112:4,113:5,114:6
+};
+
+function siraDegis(sira) {
+  if(sira === aktifSira) return;
+  aktifSira = sira;
+
+  // Buton stillerini güncelle
+  document.getElementById('btn-nuzul').classList.toggle('aktif', sira==='nuzul');
+  document.getElementById('btn-mushaf').classList.toggle('aktif', sira==='mushaf');
+
+  const world = document.getElementById('world');
+  const cols = Array.from(world.querySelectorAll('.nc'));
+  const N = cols.length;
+
+  if(sira === 'nuzul') {
+    // Nüzul sırası: mevcut dataset.nuzulIdx sırasına göre
+    cols.sort((a,b) => parseInt(a.dataset.nuzulIdx) - parseInt(b.dataset.nuzulIdx));
+  } else {
+    // Mushaf sırası: dataset.sno ve dataset.ayetBas sırasına göre
+    cols.sort((a,b) => {
+      const snoA = parseInt(a.dataset.sno), snoB = parseInt(b.dataset.sno);
+      if(snoA !== snoB) return snoA - snoB;
+      return parseInt(a.dataset.ayetBas||0) - parseInt(b.dataset.ayetBas||0);
+    });
+  }
+
+  // Animasyonlu konum değişimi
+  cols.forEach((col, newIdx) => {
+    const newX = (N - 1 - newIdx) * COL_W;
+    col.style.transition = 'left 2s cubic-bezier(.4,0,.2,1)';
+    col.style.left = newX + 'px';
+  });
+
+  // Animasyon bittikten sonra transition kaldır
+  setTimeout(() => {
+    cols.forEach(col => { col.style.transition = ''; });
+  }, 2100);
+}
+
 // ── BAŞLAT ───────────────────────────────────────────────────────────
 async function init() {
   initStars();
@@ -886,7 +1088,7 @@ async function init() {
     document.getElementById('loading').innerHTML = '<div style="color:rgba(201,169,110,.5);font-size:12px;text-align:center">Veri yüklenemedi.</div>';
     console.error(e);
   }
-  loadTefsir();
+  // loadTefsir(); // şimdilik devre dışı
 }
 init();
 </script>
