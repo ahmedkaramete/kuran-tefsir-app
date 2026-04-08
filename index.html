@@ -490,6 +490,38 @@ function salinimGuncelle(){
   requestAnimationFrame(salinimGuncelle);
 }
 
+
+// ── AKORDIYON ─────────────────────────────────────────────────────────
+let acikSutun = null;
+
+function toggleAyetler(col, colX) {
+  const world = document.getElementById('world');
+  const buApler = col.querySelectorAll('.ap');
+  const acikMi = buApler.length > 0 && buApler[0].style.display !== 'none';
+
+  // Tüm ayet kartlarını kapat
+  world.querySelectorAll('.ap').forEach(p => {
+    p.style.display = 'none';
+    p.style.opacity = '0';
+  });
+  acikSutun = null;
+
+  if (!acikMi) {
+    acikSutun = col;
+    buApler.forEach((p, i) => {
+      p.style.display = 'flex';
+      p.style.opacity = '0';
+      setTimeout(() => {
+        p.style.transition = 'opacity .2s ease, transform .2s ease';
+        p.style.opacity = '1';
+        p.style.transform = '';
+      }, i * 25);
+    });
+    if (fersah > 5) ortalaCol(colX, 5, 600);
+    else ortalaCol(colX, fersah, 400);
+  }
+}
+
 // ── SAHNE ─────────────────────────────────────────────────────────────
 function buildScene(nuzul){
   document.getElementById('loading').style.display='none';
@@ -521,22 +553,21 @@ function buildScene(nuzul){
     nh.className='nh '+(med?'medeni':'mekki');
     nh.innerHTML=`<div class="nh-ust"><div class="nh-n">${n.sira}</div><div class="nh-ar">${s.ar}</div><div class="nh-tr">${s.tr}</div></div><div class="nh-alt"><div class="nh-ay">${n.ayetler}</div><div class="nih">${med?kubbe():kabe()}</div></div>`;
 
-    // Tık: 5px eşik, tek tık modal, çift tık zoom
-    let mdX=0,mdY=0,lastTik=0;
-    nh.addEventListener('mousedown',e=>{mdX=e.clientX;mdY=e.clientY;});
-    nh.addEventListener('click',e=>{
+    // Sure kartı üst: zoom, alt: ayet kartı aç/kapat
+    const nhUst = nh.querySelector('.nh-ust');
+    const nhAlt = nh.querySelector('.nh-alt');
+    let ustMdX=0,ustMdY=0,altMdX=0,altMdY=0;
+    nhUst.addEventListener('mousedown',e=>{e.stopPropagation();ustMdX=e.clientX;ustMdY=e.clientY;});
+    nhUst.addEventListener('click',e=>{
       e.stopPropagation();
-      if(Math.abs(e.clientX-mdX)>5||Math.abs(e.clientY-mdY)>5)return;
-      const now=Date.now();
-      const cift=now-lastTik<400;
-      lastTik=now;
-      if(cift){
-        // Çift tık: zoom + ortala
-        zoomOrtala(colWorldX,N);
-      } else {
-        // Tek tık: kart aç
-        openM(sno,ayetler[0]||1,n);
-      }
+      if(Math.abs(e.clientX-ustMdX)>5||Math.abs(e.clientY-ustMdY)>5)return;
+      ortalaCol(colWorldX,Math.max(1,fersah-2),600);
+    });
+    nhAlt.addEventListener('mousedown',e=>{e.stopPropagation();altMdX=e.clientX;altMdY=e.clientY;});
+    nhAlt.addEventListener('click',e=>{
+      e.stopPropagation();
+      if(Math.abs(e.clientX-altMdX)>5||Math.abs(e.clientY-altMdY)>5)return;
+      toggleAyetler(col,colWorldX);
     });
 
     wrap.appendChild(nh);
@@ -820,37 +851,3 @@ init();
 </script>
 </body>
 </html>
-// ── AKORDIYON: AYET KARTLARI ─────────────────────────────────────────
-let acikSutun = null;
-
-function toggleAyetler(col, colX) {
-  const world = document.getElementById('world');
-  const tumApler = world.querySelectorAll('.ap');
-  const buSutunApler = col.querySelectorAll('.ap');
-  const acikMi = buSutunApler.length > 0 && buSutunApler[0].style.display !== 'none';
-
-  // Önce tümünü kapat
-  tumApler.forEach(p => {
-    p.style.display = 'none';
-    p.style.opacity = '0';
-  });
-  acikSutun = null;
-
-  if (!acikMi) {
-    // Bu sütunu aç — animasyonlu
-    acikSutun = col;
-    buSutunApler.forEach((p, i) => {
-      p.style.display = 'flex';
-      p.style.opacity = '0';
-      p.style.transform = 'translateY(-8px)';
-      setTimeout(() => {
-        p.style.transition = 'opacity .25s, transform .25s';
-        p.style.opacity = '1';
-        p.style.transform = '';
-      }, i * 30);
-    });
-    // 5. fersahtan uzaktaysa yaklaş
-    if (fersah > 5) ortalaCol(colX, 5, 600);
-    else ortalaCol(colX, fersah, 400);
-  }
-}
