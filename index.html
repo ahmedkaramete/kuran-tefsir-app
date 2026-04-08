@@ -11,126 +11,132 @@
   --bg: #0b0b1e;
   --glass: rgba(255, 255, 255, 0.08);
   --glass-border: rgba(201, 169, 110, 0.2);
-  --blur: 15px;
+  --blur: 20px;
 }
 
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:#fff;font-family:'Inter', sans-serif;}
 
-/* Arka Plan Yıldızlar */
 canvas#stars{position:absolute;inset:0;pointer-events:none;z-index:0}
 
-#app {
-  width: 100%;
-  height: 100vh;
-  position: relative;
-  overflow: hidden;
-}
+#app { width: 100%; height: 100vh; position: relative; overflow: hidden; }
 
-/* Zaman Şeridi (Zemin) */
+/* Zaman Şeridi Konteyneri */
 #world {
   position: absolute;
-  top: 0; left: 0;
-  transform-origin: 0 0;
+  top: 50%; left: 0;
+  transform-origin: 0 50%;
   transition: transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
-  will-change: transform;
+  display: flex;
+  align-items: center;
+  padding-left: 50vw; /* İlk sure merkezden başlasın */
 }
 
-/* Sade Kart Tasarımı */
+/* Kart Tasarımı */
 .column {
-  position: absolute;
-  width: 160px;
-  height: 240px;
+  flex: 0 0 180px;
+  height: 280px;
+  margin-right: 40px;
   background: var(--glass);
   border: 1px solid var(--glass-border);
-  border-radius: 12px;
+  border-radius: 16px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: transform 0.4s, border-color 0.4s;
-  text-align: center;
-  padding: 15px;
+  transition: all 0.4s ease;
+  backdrop-filter: blur(5px);
+  position: relative;
 }
 .column:hover {
-  transform: scale(1.05) translateY(-10px);
+  transform: translateY(-15px);
   border-color: var(--gold);
+  background: rgba(201, 169, 110, 0.1);
 }
-.col-title-ar { font-family: 'Amiri', serif; font-size: 24px; color: var(--gold); margin-bottom: 8px; }
-.col-title-tr { font-size: 14px; opacity: 0.8; font-weight: 300; }
+.col-num { position: absolute; top: 15px; left: 15px; font-size: 12px; color: var(--gold); opacity: 0.6; }
+.col-title-ar { font-family: 'Amiri', serif; font-size: 32px; color: var(--gold); margin-bottom: 10px; }
+.col-title-tr { font-size: 16px; font-weight: 300; letter-spacing: 1px; }
 
 /* GENİŞLEYEN KART (PORTAL) */
 #portal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.85);
+  background: rgba(5, 5, 15, 0.9);
   backdrop-filter: blur(var(--blur));
   display: none;
-  z-index: 100;
+  z-index: 1000;
   opacity: 0;
-  transition: opacity 0.5s ease;
+  transition: opacity 0.4s ease;
 }
 
 #expanded-card {
   position: absolute;
   top: 50%; left: 50%;
-  transform: translate(-50%, -50%) scale(0.9);
-  width: 90%; height: 85%;
-  max-width: 1200px;
+  transform: translate(-50%, -50%) scale(0.95);
+  width: 92%; height: 88%;
+  max-width: 1300px;
+  background-color: #000;
   background-size: cover;
   background-position: center;
-  border-radius: 24px;
-  overflow: hidden;
+  border-radius: 30px;
   display: flex;
-  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+  box-shadow: 0 50px 100px rgba(0,0,0,0.8);
+  border: 1px solid var(--glass-border);
+  overflow: hidden;
 }
 
-/* Sol İçerik Alanı (Glassmorphism) */
 .card-main {
   flex: 1;
-  padding: 60px;
+  padding: 80px;
+  background: linear-gradient(to right, rgba(0,0,0,0.85) 30%, transparent 100%);
   display: flex;
   flex-direction: column;
   justify-content: center;
-  background: linear-gradient(90deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.2) 100%);
   overflow-y: auto;
 }
 
-.ay-text-ar { font-family: 'Amiri', serif; font-size: 48px; line-height: 1.6; color: var(--gold); direction: rtl; margin-bottom: 30px; }
-.ay-text-tr { font-size: 20px; line-height: 1.8; font-weight: 300; background: var(--glass); padding: 25px; border-radius: 16px; border: 1px solid var(--glass-border); backdrop-filter: blur(5px); }
-
-/* Sağ Sabit Buton Paneli (Action Bar) */
-.action-bar {
-  width: 80px;
-  background: rgba(0,0,0,0.4);
+.ay-text-ar { font-family: 'Amiri', serif; font-size: 56px; color: var(--gold); direction: rtl; margin-bottom: 40px; line-height: 1.4; }
+.ay-text-tr { 
+  font-size: 22px; line-height: 1.8; font-weight: 300; 
+  background: rgba(255,255,255,0.05); 
+  padding: 35px; border-radius: 20px; 
+  border: 1px solid rgba(255,255,255,0.1);
   backdrop-filter: blur(10px);
+}
+
+.action-bar {
+  width: 90px;
+  background: rgba(0,0,0,0.5);
   border-left: 1px solid var(--glass-border);
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 20px 0;
-  gap: 20px;
+  padding: 30px 0;
+  gap: 25px;
 }
 
 .action-btn {
-  width: 50px; height: 50px;
-  border-radius: 12px;
-  border: 1px solid var(--glass-border);
+  width: 55px; height: 55px;
+  border-radius: 15px;
   background: var(--glass);
   color: var(--gold);
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; transition: 0.3s;
+  border: 1px solid transparent;
 }
-.action-btn:hover { background: var(--gold); color: #000; transform: translateY(-3px); }
-.action-btn svg { width: 24px; height: 24px; fill: currentColor; }
+.action-btn:hover { border-color: var(--gold); background: rgba(201,169,110,0.2); transform: scale(1.1); }
+.action-btn svg { width: 26px; height: 26px; fill: currentColor; }
 
-/* Kapatma Butonu */
-.close-portal {
-  position: absolute; top: 20px; right: 20px;
-  background: none; border: none; color: #fff; font-size: 30px; cursor: pointer; z-index: 101;
+.close-btn {
+  position: absolute; top: 30px; right: 30px;
+  width: 40px; height: 40px; border-radius: 50%;
+  background: rgba(255,255,255,0.1); border: none;
+  color: #fff; font-size: 24px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1001; transition: 0.3s;
 }
+.close-btn:hover { background: #ff4757; }
 
 </style>
 </head>
@@ -142,7 +148,7 @@ canvas#stars{position:absolute;inset:0;pointer-events:none;z-index:0}
 </div>
 
 <div id="portal-overlay">
-  <button class="close-portal" onclick="closePortal()">×</button>
+  <button class="close-btn" onclick="closePortal()">×</button>
   <div id="expanded-card">
     <div class="card-main">
       <div id="p-ar" class="ay-text-ar"></div>
@@ -158,53 +164,45 @@ canvas#stars{position:absolute;inset:0;pointer-events:none;z-index:0}
 </div>
 
 <script>
-// MOCK DATA (Gelecekte JSON'dan gelecek)
+// SENİN TÜM VERİ LİSTEN (Orijinal sıralama ve isimlerle)
 const NUZUL = [
-  { s:96, tr:"Alak", ar:"العلق", sira:1 },
-  { s:68, tr:"Kalem", ar:"القلم", sira:2 },
-  { s:73, tr:"Müzzemmil", ar:"المزمل", sira:3 }
-  // ... Tüm listeyi buraya ekleyebilirsin
+  {s:96,tr:"Alak",ar:"العلق",sira:1},{s:68,tr:"Kalem",ar:"القلم",sira:2},{s:73,tr:"Müzzemmil",ar:"المزمل",sira:3},{s:74,tr:"Müddessir",ar:"المدثر",sira:4},{s:1,tr:"Fâtiha",ar:"الفاتحة",sira:5},{s:111,tr:"Mesed",ar:"المسد",sira:6},{s:81,tr:"Tekvîr",ar:"التكوير",sira:7},{s:87,tr:"A’lâ",ar:"الأعلى",sira:8},{s:92,tr:"Leyl",ar:"الليل",sira:9},{s:89,tr:"Fecr",ar:"الفجر",sira:10},{s:93,tr:"Duhâ",ar:"الضحى",sira:11},{s:94,tr:"İnşirâh",ar:"الشرح",sira:12},{s:103,tr:"Asr",ar:"العصر",sira:13},{s:100,tr:"Âdiyât",ar:"العاديات",sira:14},{s:108,tr:"Kevser",ar:"الكوثر",sira:15},{s:102,tr:"Tekâsür",ar:"التكاثر",sira:16},{s:107,tr:"Mâûn",ar:"الماعون",sira:17},{s:109,tr:"Kâfirûn",ar:"Kâfirûn",sira:18},{s:105,tr:"Fîl",ar:"الفيل",sira:19},{s:113,tr:"Felak",ar:"الفلق",sira:20},{s:114,tr:"Nâs",ar:"الناس",sira:21},{s:112,tr:"İhlâs",ar:"الإخلاص",sira:22},{s:53,tr:"Necm",ar:"النجم",sira:23},{s:80,tr:"Abese",ar:"عبس",sira:24},{s:97,tr:"Kadir",ar:"القدر",sira:25},{s:91,tr:"Şems",ar:"الشمس",sira:26},{s:85,tr:"Burûc",ar:"البروج",sira:27},{s:95,tr:"Tîn",ar:"التين",sira:28},{s:106,tr:"Kureyş",ar:"قريش",sira:29},{s:101,tr:"Kâria",ar:"القارعة",sira:30},{s:75,tr:"Kıyâmet",ar:"القيامة",sira:31},{s:104,tr:"Hümeze",ar:"الهمزة",sira:32},{s:77,tr:"Mürselât",ar:"المرسلات",sira:33},{s:50,tr:"Kâf",ar:"ق",sira:34},{s:90,tr:"Beled",ar:"البلد",sira:35},{s:86,tr:"Târık",ar:"الطارق",sira:36},{s:54,tr:"Kamer",ar:"القمر",sira:37},{s:38,tr:"Sâd",ar:"ص",sira:38},{s:7,tr:"A’râf",ar:"الأعراف",sira:39},{s:72,tr:"Cin",ar:"الجن",sira:40},{s:36,tr:"Yâsîn",ar:"يس",sira:41},{s:25,tr:"Furkan",ar:"الفرقان",sira:42},{s:35,tr:"Fâtır",ar:"Fatır",sira:43},{s:19,tr:"Meryem",ar:"مريم",sira:44},{s:20,tr:"Tâhâ",ar:"طه",sira:45},{s:56,tr:"Vâkıa",ar:"الواقعة",sira:46},{s:26,tr:"Şuarâ",ar:"الشعراء",sira:47},{s:27,tr:"Neml",ar:"النمل",sira:48},{s:28,tr:"Kasas",ar:"القصص",sira:49},{s:17,tr:"İsrâ",ar:"الإسراء",sira:50},{s:10,tr:"Yûnus",ar:"يونس",sira:51},{s:11,tr:"Hûd",ar:"هود",sira:52},{s:12,tr:"Yûsuf",ar:"يوسف",sira:53},{s:15,tr:"Hicr",ar:"الحجر",sira:54},{s:6,tr:"En’âm",ar:"الأنعام",sira:55},{s:37,tr:"Sâffât",ar:"الصافات",sira:56},{s:31,tr:"Lokmân",ar:"لقمان",sira:57},{s:34,tr:"Sebe’",ar:"سبأ",sira:58},{s:39,tr:"Zümer",ar:"الزمر",sira:59},{s:40,tr:"Mü’min",ar:"غافر",sira:60},{s:41,tr:"Fussılet",ar:"فصلت",sira:61},{s:42,tr:"Şûrâ",ar:"الشورى",sira:62},{s:43,tr:"Zuhruf",ar:"الزخرف",sira:63},{s:44,tr:"Duhân",ar:"الدخان",sira:64},{s:45,tr:"Câsiye",ar:"الجاثية",sira:65},{s:46,tr:"Ahkâf",ar:"الأحقاف",sira:66},{s:51,tr:"Zâriyât",ar:"الذاريات",sira:67},{s:88,tr:"Gâşiye",ar:"الغاشية",sira:68},{s:18,tr:"Kehf",ar:"الكهf",sira:69},{s:16,tr:"Nahl",ar:"النحل",sira:70},{s:71,tr:"Nûh",ar:"نوح",sira:71},{s:14,tr:"İbrâhîm",ar:"إبراهيم",sira:72},{s:21,tr:"Enbiyâ",ar:"الأنبياء",sira:73},{s:23,tr:"Mü’minûn",ar:"المؤمنون",sira:74},{s:32,tr:"Secde",ar:"السجدة",sira:75},{s:52,tr:"Tûr",ar:"الطور",sira:76},{s:67,tr:"Mülk",ar:"الملك",sira:77},{s:69,tr:"Hâkka",ar:"الحاقة",sira:78},{s:70,tr:"Meâric",ar:"المعارج",sira:79},{s:78,tr:"Nebe’",ar:"النبأ",sira:80},{s:79,tr:"Nâziât",ar:"النازعات",sira:81},{s:82,tr:"İnfitâr",ar:"الانفطار",sira:82},{s:84,tr:"İnşikâk",ar:"الانشقاق",sira:83},{s:30,tr:"Rûm",ar:"الروم",sira:84},{s:29,tr:"Ankebût",ar:"العنكبوت",sira:85},{s:83,tr:"Mutaffifîn",ar:"المطففين",sira:86},{s:2,tr:"Bakara",ar:"البقرة",sira:87},{s:8,tr:"Enfâl",ar:"الأنفال",sira:88},{s:3,tr:"Âl-i İmrân",ar:"آل عمران",sira:89},{s:33,tr:"Ahzâb",ar:"الأحزاب",sira:90},{s:60,tr:"Mümtehine",ar:"الممتحنة",sira:91},{s:4,tr:"Nisâ",ar:"النساء",sira:92},{s:99,tr:"Zilzâl",ar:"الزلزلة",sira:93},{s:57,tr:"Hadîd",ar:"الحديد",sira:94},{s:47,tr:"Muhammed",ar:"محمد",sira:95},{s:13,tr:"Ra’d",ar:"الرعد",sira:96},{s:55,tr:"Rahmân",ar:"الرحمن",sira:97},{s:76,tr:"İnsan",ar:"الإنسان",sira:98},{s:65,tr:"Talâk",ar:"الطلاق",sira:99},{s:98,tr:"Beyyine",ar:"البينة",sira:100},{s:59,tr:"Haşr",ar:"الحشر",sira:101},{s:24,tr:"Nûr",ar:"النور",sira:102},{s:22,tr:"Hac",ar:"الحج",sira:103},{s:63,tr:"Münâfikûn",ar:"المنافقون",sira:104},{s:58,tr:"Mücâdele",ar:"المجادلة",sira:105},{s:49,tr:"Hucurât",ar:"الحجرات",sira:106},{s:66,tr:"Tahrîm",ar:"التحريم",sira:107},{s:64,tr:"Tegâbun",ar:"التغابن",sira:108},{s:61,tr:"Saff",ar:"الصف",sira:109},{s:62,tr:"Cuma",ar:"الجمعة",sira:110},{s:48,tr:"Fetih",ar:"الفتح",sira:111},{s:5,tr:"Mâide",ar:"المائدة",sira:112},{s:9,tr:"Tevbe",ar:"التوبة",sira:113},{s:110,tr:"Nasr",ar:"النصر",sira:114}
 ];
-
-const COL_W = 200;
-let fersah = 5;
-let wx = 0, wy = 0;
 
 function init() {
   const world = document.getElementById('world');
   NUZUL.forEach((n, i) => {
     const col = document.createElement('div');
     col.className = 'column';
-    col.style.left = (i * COL_W) + 'px';
-    col.style.top = '300px';
-    col.innerHTML = `<div class="col-title-ar">${n.ar}</div><div class="col-title-tr">${n.tr}</div>`;
-    col.onclick = () => openPortal(n);
+    col.innerHTML = `
+      <div class="col-num">${n.sira}</div>
+      <div class="col-title-ar">${n.ar}</div>
+      <div class="col-title-tr">${n.tr}</div>
+    `;
+    col.onclick = () => openPortal(n, i);
     world.appendChild(col);
   });
   
-  // Başlangıç Odağı: 1. Sureye Zoom Yap
-  setTimeout(() => {
-    focusOn(0);
-  }, 500);
+  // İlk girişte Bakara Suresine (sira 87) odaklan veya en başa git
+  setTimeout(() => focusOn(0), 100);
 }
 
 function focusOn(index) {
   const world = document.getElementById('world');
-  const targetX = -(index * COL_W) + (window.innerWidth / 2 - 80);
-  const scale = 1;
-  world.style.transform = `translate(${targetX}px, 0px) scale(${scale})`;
+  const cardWidth = 220; // 180px + 40px margin
+  const targetX = -(index * cardWidth);
+  world.style.transform = `translateX(${targetX}px)`;
 }
 
-function openPortal(n) {
+function openPortal(n, index) {
   const overlay = document.getElementById('portal-overlay');
   const card = document.getElementById('expanded-card');
   
-  // İçerik Doldurma (Örnek)
   document.getElementById('p-ar').innerText = "بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ";
-  document.getElementById('p-tr').innerText = n.tr + " suresi tefekkür sayfası. Burada meal ve kullanıcının kişisel notları yer alacak.";
+  document.getElementById('p-tr').innerText = n.tr + " Suresi (" + n.s + ". Sure)\n\nNüzul sırasına göre " + n.sira + ". sırada inmiştir. Bu alanda mealler, tefsirler ve senin kişisel notların yer alacak.";
   
-  // AI Arka Planı (Örnek)
-  card.style.backgroundImage = `url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80')`;
+  // Örnek bir AI Arka planı (Sureye göre değişebilir)
+  card.style.backgroundImage = `url('https://images.unsplash.com/photo-1519817650390-64a93db51149?q=80&w=2000&auto=format&fit=crop')`;
   
   overlay.style.display = 'block';
   setTimeout(() => {
@@ -217,30 +215,48 @@ function closePortal() {
   const overlay = document.getElementById('portal-overlay');
   const card = document.getElementById('expanded-card');
   overlay.style.opacity = '0';
-  card.style.transform = 'translate(-50%, -50%) scale(0.9)';
-  setTimeout(() => overlay.style.display = 'none', 500);
+  card.style.transform = 'translate(-50%, -50%) scale(0.95)';
+  setTimeout(() => overlay.style.display = 'none', 400);
 }
 
-// Yıldız Arka Planı
+// Yıldız Arka Planı Animasyonu
 const canvas = document.getElementById('stars');
 const ctx = canvas.getContext('2d');
-function resize() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-}
-window.onresize = resize;
-resize();
+let stars = [];
 
-function drawStars() {
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  ctx.fillStyle = "#fff";
-  for(let i=0; i<200; i++) {
-    ctx.beginPath();
-    ctx.arc(Math.random()*canvas.width, Math.random()*canvas.height, Math.random()*1.5, 0, Math.PI*2);
-    ctx.fill();
+function createStars() {
+  stars = [];
+  for(let i=0; i<400; i++) {
+    stars.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      size: Math.random() * 1.5,
+      speed: Math.random() * 0.5
+    });
   }
 }
-drawStars();
+
+function animateStars() {
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
+  stars.forEach(s => {
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.size, 0, Math.PI*2);
+    ctx.fill();
+    s.x -= s.speed;
+    if(s.x < 0) s.x = canvas.width;
+  });
+  requestAnimationFrame(animateStars);
+}
+
+window.onresize = () => {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  createStars();
+};
+
+window.onresize();
+animateStars();
 init();
 
 </script>
