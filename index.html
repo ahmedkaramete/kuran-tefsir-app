@@ -169,9 +169,9 @@ body { font-family: system-ui, -apple-system, sans-serif; color: #e8e0d0; }
 .yb-mekke .yb-yil { color: rgba(201,169,110,.82); }
 .yb-hicr .yb-yil { color: rgba(255,215,90,.95); }
 .yb-medine .yb-yil { color: rgba(80,190,140,.82); }
-.yb-nub { font-size: 13px; font-weight: 600; line-height: 1.4; transform-origin: center center; }
-.yb-hicri { font-size: 13px; font-weight: 600; line-height: 1.4; transform-origin: center center; }
-.yb-miladi { font-size: 12px; opacity: .75; line-height: 1.4; transform-origin: center center; }
+.yb-nub { font-size: 26px; font-weight: 600; line-height: 1.4; transform-origin: center center; }
+.yb-hicri { font-size: 26px; font-weight: 600; line-height: 1.4; transform-origin: center center; }
+.yb-miladi { font-size: 24px; opacity: .75; line-height: 1.4; transform-origin: center center; }
 .yb-mekke .yb-nub, .yb-mekke .yb-hicri, .yb-mekke .yb-miladi { color: rgba(201,169,110,.75); }
 .yb-hicr .yb-nub, .yb-hicr .yb-hicri, .yb-hicr .yb-miladi { color: rgba(255,215,90,.9); }
 .yb-medine .yb-nub, .yb-medine .yb-hicri, .yb-medine .yb-miladi { color: rgba(80,190,140,.75); }
@@ -390,6 +390,10 @@ body { font-family: system-ui, -apple-system, sans-serif; color: #e8e0d0; }
 }
 .y-dots span:nth-child(2) { animation-delay: .2s; }
 .y-dots span:nth-child(3) { animation-delay: .4s; }
+@keyframes ayetGelAnim {
+  from { opacity: 0; transform: scale(.7); }
+  to { opacity: 1; transform: scale(1); }
+}
 @keyframes ydot { 0%,80%,100% { opacity: .2; transform: scale(.8); } 40% { opacity: 1; transform: scale(1); } }
 
 /* ═══════════════════════════════════════════════════════════
@@ -491,7 +495,6 @@ body { font-family: system-ui, -apple-system, sans-serif; color: #e8e0d0; }
     </div>
     <!-- Arka yüz: Tefsir -->
     <div class="modal-yuz" id="modal-arka">
-      <button class="modal-kapat" onclick="event.stopPropagation();modalKapat()">✕</button>
       <div class="tef-baslik" id="tef-baslik">Tefsir</div>
       <div class="tef-kaynak">Mefâtîhu'l-Gayb · Fahreddin er-Râzî · Akçağ Yayınları</div>
       <div class="tef-metin" id="tef-metin"></div>
@@ -593,6 +596,7 @@ const AR_AYET = {
 // DURUM
 // ═══════════════════════════════════════════════════════════
 let NUZUL = [];
+let N_COLS = 0; // toplam sütun sayısı
 let tefsirTam = null, tefsirYukleniyor = false;
 let fitScale = 1, scale = 1, fersah = FERSAH_SAYISI;
 let tx = 0, ty = 0;
@@ -667,15 +671,11 @@ function applyT() {
   fersah = Math.max(1, Math.min(FERSAH_SAYISI, mevcut));
   document.getElementById('fersah-ind').textContent = fersah + '. FERSAH';
 
-  // Yıl bandı yazıları: CSS fixed font-size ile sabit kalır
-  // scale kompansasyonu CSS'te position:fixed ile değil, world dışında tutarak yapılacak
-  // Şimdilik: yıl bandı world içinde ama yazılar küçük-sabit kalsın
-  // Gerçek çözüm: yıl bandını world dışına al, sadece tx ile senkronize et
-  const inv = 1 / scale;
-  document.querySelectorAll('.yb-nub, .yb-hicri, .yb-miladi').forEach(el => {
-    el.style.transform = `scale(${inv})`;
-    el.style.transformOrigin = 'center center';
-  });
+  // Yıl bandı: world'den bağımsız, sadece yatay tx ile senkronize
+  const yb = document.getElementById('yil-bandi');
+  if (yb) {
+    yb.style.transform = `translateX(${tx + (N_COLS * COL_W - 1) * scale * 0}px) scaleX(${scale})`;
+  }
 
   // Sınır kontrolü — kartlar tamamen dışarı çıkmasın
   sinirlariUygula();
@@ -803,33 +803,127 @@ function buildYilBandi(N) {
 function toggleAyetler(col, colX) {
   const world = document.getElementById('world');
   const buApler = col.querySelectorAll('.ap');
-  const acikMi = buApler.length > 0 && buApler[0].style.display !== 'none';
+  const acikMi = acikSutun === col;
 
-  // Tüm ayet kartlarını kapat
-  world.querySelectorAll('.ap').forEach(p => {
-    p.style.display = 'none';
-    p.style.opacity = '0';
+  // Kapat
+  if (acikMi) {
+    ayetPanelKapat();
+    return;
+  }
+
+  // Tüm ayet kartlarını gizle, ok sıfırla
+  world.querySelectorAll('.ap').forEach(p => { p.style.display = 'none'; });
+  world.querySelectorAll('.nh-alt').forEach(el => el.classList.remove('acik'));
+
+  // Tüm sure sütunları aşağı kayar (gizlenir)
+  const tumCols = Array.from(world.querySelectorAll('.nc'));
+  tumCols.forEach(c => {
+    if (c !== col) {
+      c.style.transition = 'transform .4s ease, opacity .4s ease';
+      c.style.transform = 'translateY(120%)';
+      c.style.opacity = '0.15';
+      c.style.pointerEvents = 'none';
+    }
   });
-  // Tüm ok ikonlarını sıfırla
+
+  // Seçili sure sütunu zaman şeridinin sağ kenarına git
+  const { w } = vpBoy();
+  const hedefColX = (NUZUL.length - 1) * COL_W; // en sağdaki pozisyon
+  const guncelColX = parseInt(col.dataset.colX) || colX;
+
+  col.style.transition = 'left .5s cubic-bezier(.4,0,.2,1)';
+  col.style.left = hedefColX + 'px';
+  col.dataset.colX = hedefColX;
+
+  // Kamerayı o sütuna götür
+  setTimeout(() => {
+    ortalaCol(hedefColX, Math.min(fersah, 5), 400);
+  }, 100);
+
+  // Ayet panelini oluştur
+  acikSutun = col;
+  col.querySelector('.nh-alt').classList.add('acik');
+
+  // Mevcut ayet panelini temizle
+  const eskiPanel = document.getElementById('ayet-panel');
+  if (eskiPanel) eskiPanel.remove();
+
+  // Ayet numaralarını yatay panel olarak oluştur
+  const panel = document.createElement('div');
+  panel.id = 'ayet-panel';
+  panel.style.cssText = `
+    position: absolute;
+    top: ${YB_H}px;
+    right: ${(NUZUL.length - 1 - NUZUL.length + 1) * COL_W + COL_W}px;
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+    justify-content: flex-end;
+    direction: rtl;
+    gap: 4px;
+    padding: 8px;
+    max-width: ${(NUZUL.length - 1) * COL_W}px;
+    z-index: 20;
+  `;
+
+  const ayetler = buApler.length > 0
+    ? Array.from(buApler).map(p => p.querySelector('.ap-n')?.textContent)
+    : [];
+
+  buApler.forEach((origP, i) => {
+    const btn = document.createElement('div');
+    btn.className = 'ayet-btn';
+    btn.textContent = origP.querySelector('.ap-n')?.textContent || (i + 1);
+    btn.style.cssText = `
+      width: 36px; height: 36px;
+      background: rgba(201,169,110,.1);
+      border: .5px solid rgba(201,169,110,.35);
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; color: rgba(201,169,110,.85);
+      cursor: pointer;
+      transition: background .15s, transform .15s;
+      opacity: 0;
+      animation: ayetGelAnim .2s ease forwards;
+      animation-delay: ${i * 15}ms;
+    `;
+    btn.addEventListener('click', () => {
+      const ano = parseInt(btn.textContent);
+      const sno = parseInt(col.dataset.sno);
+      const nuzulIdx = parseInt(col.dataset.nuzulIdx);
+      const n = NUZUL[nuzulIdx];
+      if (n) modalAc(sno, ano, n);
+    });
+    btn.addEventListener('mouseenter', () => { btn.style.background = 'rgba(201,169,110,.25)'; btn.style.transform = 'scale(1.15)'; });
+    btn.addEventListener('mouseleave', () => { btn.style.background = 'rgba(201,169,110,.1)'; btn.style.transform = ''; });
+    panel.appendChild(btn);
+  });
+
+  world.appendChild(panel);
+}
+
+function ayetPanelKapat() {
+  const world = document.getElementById('world');
+
+  // Paneli kaldır
+  const panel = document.getElementById('ayet-panel');
+  if (panel) panel.remove();
+
+  // Sure sütunlarını geri getir
+  world.querySelectorAll('.nc').forEach(c => {
+    c.style.transition = 'transform .4s ease, opacity .4s ease';
+    c.style.transform = '';
+    c.style.opacity = '';
+    c.style.pointerEvents = '';
+  });
+
+  // Ok ikonlarını sıfırla
   world.querySelectorAll('.nh-alt').forEach(el => el.classList.remove('acik'));
   acikSutun = null;
 
-  if (!acikMi) {
-    acikSutun = col;
-    col.querySelector('.nh-alt').classList.add('acik');
-    buApler.forEach((p, i) => {
-      p.style.display = 'flex';
-      p.style.opacity = '0';
-      p.style.transform = 'translateY(-6px)';
-      setTimeout(() => {
-        p.style.transition = 'opacity .2s ease, transform .2s ease';
-        p.style.opacity = '1';
-        p.style.transform = '';
-      }, i * 20);
-    });
-    // Yaklaş
-    ortalaCol(colX, Math.min(fersah, 5), 500);
-  }
+  setTimeout(() => {
+    world.querySelectorAll('.nc').forEach(c => { c.style.transition = ''; });
+  }, 450);
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -841,6 +935,7 @@ function buildScene(nuzul) {
   // Yıl bandını koru, sütunları temizle
   world.querySelectorAll('.nc').forEach(c => c.remove());
   const N = nuzul.length;
+  N_COLS = N;
 
   nuzul.forEach((n, i) => {
     const sno = n.sure_no;
@@ -935,7 +1030,9 @@ function buildScene(nuzul) {
         e.stopPropagation();
         if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
         if (Math.abs(e.clientX - apMd.x) > 5 || Math.abs(e.clientY - apMd.y) > 5) return;
-        if (fersah > 5) { ortalaCol(colX, 5, 500); return; }
+        // Güncel colX'i col dataset'ten al (mushaf sırası değişmiş olabilir)
+        const guncelColX = parseInt(col.dataset.colX) || colX;
+        if (fersah > 5) { ortalaCol(guncelColX, 5, 500); return; }
         modalAc(sno, ano, n);
       });
 
