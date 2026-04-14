@@ -169,9 +169,9 @@ body { font-family: system-ui, -apple-system, sans-serif; color: #e8e0d0; }
 .yb-mekke .yb-yil { color: rgba(201,169,110,.82); }
 .yb-hicr .yb-yil { color: rgba(255,215,90,.95); }
 .yb-medine .yb-yil { color: rgba(80,190,140,.82); }
-.yb-nub { font-size: 26px; font-weight: 600; line-height: 1.4; transform-origin: center center; }
-.yb-hicri { font-size: 26px; font-weight: 600; line-height: 1.4; transform-origin: center center; }
-.yb-miladi { font-size: 24px; opacity: .75; line-height: 1.4; transform-origin: center center; }
+.yb-nub { font-size: 26px; font-weight: 600; line-height: 1.4; }
+.yb-hicri { font-size: 26px; font-weight: 600; line-height: 1.4; }
+.yb-miladi { font-size: 24px; opacity: .75; line-height: 1.4; }
 .yb-mekke .yb-nub, .yb-mekke .yb-hicri, .yb-mekke .yb-miladi { color: rgba(201,169,110,.75); }
 .yb-hicr .yb-nub, .yb-hicr .yb-hicri, .yb-hicr .yb-miladi { color: rgba(255,215,90,.9); }
 .yb-medine .yb-nub, .yb-medine .yb-hicri, .yb-medine .yb-miladi { color: rgba(80,190,140,.75); }
@@ -747,9 +747,11 @@ function ortalaCol(colX, hedefFersah, dur) {
 // ═══════════════════════════════════════════════════════════
 function buildYilBandi(N) {
   const yb = document.getElementById('yil-bandi');
+  const kap = document.getElementById('yil-bandi-kap');
   yb.innerHTML = '';
   yb.style.width = (N * COL_W) + 'px';
   yb.style.height = YB_H + 'px';
+  if (kap) kap.style.height = YB_H + 'px';
 
   const YILLAR = 22; // 610-631
   const colsPerYil = N / YILLAR;
@@ -848,22 +850,27 @@ function toggleAyetler(col, colX) {
   const eskiPanel = document.getElementById('ayet-panel');
   if (eskiPanel) eskiPanel.remove();
 
-  // Ayet numaralarını yatay panel olarak oluştur
+  // Ayet paneli: VP içinde, yıl bandının hemen altında, sabit genişlik
+  const vp = document.getElementById('vp');
+  const { w: vpW } = vpBoy();
   const panel = document.createElement('div');
   panel.id = 'ayet-panel';
   panel.style.cssText = `
     position: absolute;
-    top: ${YB_H}px;
-    right: ${(NUZUL.length - 1 - NUZUL.length + 1) * COL_W + COL_W}px;
+    top: ${YB_H + 4}px;
+    left: 0;
+    right: 0;
     display: flex;
     flex-wrap: wrap;
     flex-direction: row;
-    justify-content: flex-end;
+    justify-content: flex-start;
     direction: rtl;
-    gap: 4px;
-    padding: 8px;
-    max-width: ${(NUZUL.length - 1) * COL_W}px;
+    gap: 5px;
+    padding: 10px 14px;
     z-index: 20;
+    background: rgba(9,9,24,.85);
+    backdrop-filter: blur(4px);
+    border-bottom: .5px solid rgba(201,169,110,.2);
   `;
 
   const ayetler = buApler.length > 0
@@ -899,7 +906,7 @@ function toggleAyetler(col, colX) {
     panel.appendChild(btn);
   });
 
-  world.appendChild(panel);
+  document.getElementById('vp').appendChild(panel);
 }
 
 function ayetPanelKapat() {
@@ -908,6 +915,15 @@ function ayetPanelKapat() {
   // Paneli kaldır
   const panel = document.getElementById('ayet-panel');
   if (panel) panel.remove();
+  // Sure kartlarını sıfırla (aşağı kayma varsa)
+  const world2 = document.getElementById('world');
+  world2.querySelectorAll('.nc').forEach(c => {
+    c.style.transition = 'transform .4s ease, opacity .4s ease';
+    c.style.transform = '';
+    c.style.opacity = '';
+    c.style.pointerEvents = '';
+  });
+  setTimeout(() => { world2.querySelectorAll('.nc').forEach(c => { c.style.transition = ''; }); }, 450);
 
   // Sure sütunlarını geri getir
   world.querySelectorAll('.nc').forEach(c => {
